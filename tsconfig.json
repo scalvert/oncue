@@ -1,0 +1,30 @@
+{
+  // The engine, CLI, builder, tests, and example build scripts. Node runs these .ts files directly
+  // (type stripping), so only erasable syntax is allowed and imports name their .ts extension.
+  // tsconfig.build.json compiles them to dist/ for the published package. The browser
+  // composition has its own config: composition/tsconfig.json.
+  "compilerOptions": {
+    "target": "ES2023",
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"],
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    // Templates and examples import "oncue" as a user would; in this repo that's the source.
+    "paths": {
+      "oncue": ["./src/index.ts"],
+      "oncue/engine": ["./src/engine.ts"],
+      "oncue/capture": ["./src/capture.ts"]
+    }
+  },
+  "include": ["src", "tests", "examples/*/oncue.config.ts", "examples/*/projects/*/build.ts", "templates/**/*.ts"]
+}

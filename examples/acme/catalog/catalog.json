@@ -1,0 +1,11 @@
+{
+  "tracks": [
+    { "id": "getting-started", "label": "Getting started" },
+    { "id": "api", "label": "API" }
+  ],
+  "series": {
+    "search": { "label": "Search API" }
+  },
+  "order": ["hello", "search-api"],
+  "mediaBaseUrl": null
+}

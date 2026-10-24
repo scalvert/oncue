@@ -1,0 +1,18 @@
+{
+  "routes": [
+    {
+      "method": "POST",
+      "path": "^/v1/search$",
+      "responses": [
+        {
+          "query": "refund policy",
+          "results": [
+            { "title": "Refunds and returns", "source": "help-center", "score": 0.94 },
+            { "title": "Billing FAQ", "source": "docs", "score": 0.81 }
+          ],
+          "took_ms": 42
+        }
+      ]
+    }
+  ]
+}

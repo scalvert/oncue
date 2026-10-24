@@ -1,0 +1,183 @@
+{
+ "text": "Acme gives your app one API for search and answers. <break time=\"0.9s\" /> You send a question. You get back ranked results with sources. <break time=\"0.9s\" /> Start with the quickstart at docs dot acme dot dev.",
+ "voice": {
+  "voice_id": "oncue-placeholder",
+  "model_id": "oncue-placeholder",
+  "settings": {}
+ },
+ "words": [
+  {
+   "word": "Acme",
+   "start": 0.25,
+   "end": 0.485
+  },
+  {
+   "word": "gives",
+   "start": 0.544,
+   "end": 0.838
+  },
+  {
+   "word": "your",
+   "start": 0.897,
+   "end": 1.132
+  },
+  {
+   "word": "app",
+   "start": 1.191,
+   "end": 1.368
+  },
+  {
+   "word": "one",
+   "start": 1.426,
+   "end": 1.603
+  },
+  {
+   "word": "API",
+   "start": 1.662,
+   "end": 1.838
+  },
+  {
+   "word": "for",
+   "start": 1.897,
+   "end": 2.074
+  },
+  {
+   "word": "search",
+   "start": 2.132,
+   "end": 2.485
+  },
+  {
+   "word": "and",
+   "start": 2.544,
+   "end": 2.721
+  },
+  {
+   "word": "answers.",
+   "start": 2.779,
+   "end": 3.25
+  },
+  {
+   "word": "You",
+   "start": 4.568,
+   "end": 4.744
+  },
+  {
+   "word": "send",
+   "start": 4.803,
+   "end": 5.038
+  },
+  {
+   "word": "a",
+   "start": 5.097,
+   "end": 5.156
+  },
+  {
+   "word": "question.",
+   "start": 5.215,
+   "end": 5.744
+  },
+  {
+   "word": "You",
+   "start": 6.103,
+   "end": 6.279
+  },
+  {
+   "word": "get",
+   "start": 6.338,
+   "end": 6.515
+  },
+  {
+   "word": "back",
+   "start": 6.574,
+   "end": 6.809
+  },
+  {
+   "word": "ranked",
+   "start": 6.868,
+   "end": 7.221
+  },
+  {
+   "word": "results",
+   "start": 7.279,
+   "end": 7.691
+  },
+  {
+   "word": "with",
+   "start": 7.75,
+   "end": 7.985
+  },
+  {
+   "word": "sources.",
+   "start": 8.044,
+   "end": 8.515
+  },
+  {
+   "word": "Start",
+   "start": 9.832,
+   "end": 10.126
+  },
+  {
+   "word": "with",
+   "start": 10.185,
+   "end": 10.421
+  },
+  {
+   "word": "the",
+   "start": 10.479,
+   "end": 10.656
+  },
+  {
+   "word": "quickstart",
+   "start": 10.715,
+   "end": 11.303
+  },
+  {
+   "word": "at",
+   "start": 11.362,
+   "end": 11.479
+  },
+  {
+   "word": "docs",
+   "start": 11.538,
+   "end": 11.774
+  },
+  {
+   "word": "dot",
+   "start": 11.832,
+   "end": 12.009
+  },
+  {
+   "word": "acme",
+   "start": 12.068,
+   "end": 12.303
+  },
+  {
+   "word": "dot",
+   "start": 12.362,
+   "end": 12.538
+  },
+  {
+   "word": "dev.",
+   "start": 12.597,
+   "end": 12.832
+  }
+ ],
+ "segments": [
+  {
+   "id": "s1",
+   "start": 0.25,
+   "end": 3.25
+  },
+  {
+   "id": "s2",
+   "start": 4.568,
+   "end": 8.515
+  },
+  {
+   "id": "s3",
+   "start": 9.832,
+   "end": 12.832
+  }
+ ],
+ "audioSha256": "afdffdefbe0bec7faf170ff891b69d6862089b0994731aa5347af4c7e32d2b5b"
+}

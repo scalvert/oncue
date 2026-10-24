@@ -1,0 +1,318 @@
+{
+ "text": "Here's one search call to the Acme API, start to finish. <break time=\"0.9s\" /> Post a query to slash v one slash search. The response comes back in about forty milliseconds. <break time=\"0.9s\" /> Each result has a title, a source, and a score. Show the top result first, and cite its source. <break time=\"0.9s\" /> The full reference is at docs dot acme dot dev.",
+ "voice": {
+  "voice_id": "oncue-placeholder",
+  "model_id": "oncue-placeholder",
+  "settings": {}
+ },
+ "words": [
+  {
+   "word": "Here's",
+   "start": 0.25,
+   "end": 0.603
+  },
+  {
+   "word": "one",
+   "start": 0.662,
+   "end": 0.838
+  },
+  {
+   "word": "search",
+   "start": 0.897,
+   "end": 1.25
+  },
+  {
+   "word": "call",
+   "start": 1.309,
+   "end": 1.544
+  },
+  {
+   "word": "to",
+   "start": 1.603,
+   "end": 1.721
+  },
+  {
+   "word": "the",
+   "start": 1.779,
+   "end": 1.956
+  },
+  {
+   "word": "Acme",
+   "start": 2.015,
+   "end": 2.25
+  },
+  {
+   "word": "API,",
+   "start": 2.309,
+   "end": 2.544
+  },
+  {
+   "word": "start",
+   "start": 2.723,
+   "end": 3.017
+  },
+  {
+   "word": "to",
+   "start": 3.076,
+   "end": 3.194
+  },
+  {
+   "word": "finish.",
+   "start": 3.252,
+   "end": 3.664
+  },
+  {
+   "word": "Post",
+   "start": 4.982,
+   "end": 5.217
+  },
+  {
+   "word": "a",
+   "start": 5.276,
+   "end": 5.335
+  },
+  {
+   "word": "query",
+   "start": 5.394,
+   "end": 5.688
+  },
+  {
+   "word": "to",
+   "start": 5.746,
+   "end": 5.864
+  },
+  {
+   "word": "slash",
+   "start": 5.923,
+   "end": 6.217
+  },
+  {
+   "word": "v",
+   "start": 6.276,
+   "end": 6.335
+  },
+  {
+   "word": "one",
+   "start": 6.394,
+   "end": 6.57
+  },
+  {
+   "word": "slash",
+   "start": 6.629,
+   "end": 6.923
+  },
+  {
+   "word": "search.",
+   "start": 6.982,
+   "end": 7.394
+  },
+  {
+   "word": "The",
+   "start": 7.752,
+   "end": 7.929
+  },
+  {
+   "word": "response",
+   "start": 7.988,
+   "end": 8.458
+  },
+  {
+   "word": "comes",
+   "start": 8.517,
+   "end": 8.811
+  },
+  {
+   "word": "back",
+   "start": 8.87,
+   "end": 9.105
+  },
+  {
+   "word": "in",
+   "start": 9.164,
+   "end": 9.282
+  },
+  {
+   "word": "about",
+   "start": 9.341,
+   "end": 9.635
+  },
+  {
+   "word": "forty",
+   "start": 9.694,
+   "end": 9.988
+  },
+  {
+   "word": "milliseconds.",
+   "start": 10.046,
+   "end": 10.811
+  },
+  {
+   "word": "Each",
+   "start": 12.129,
+   "end": 12.364
+  },
+  {
+   "word": "result",
+   "start": 12.423,
+   "end": 12.776
+  },
+  {
+   "word": "has",
+   "start": 12.835,
+   "end": 13.011
+  },
+  {
+   "word": "a",
+   "start": 13.07,
+   "end": 13.129
+  },
+  {
+   "word": "title,",
+   "start": 13.188,
+   "end": 13.541
+  },
+  {
+   "word": "a",
+   "start": 13.719,
+   "end": 13.778
+  },
+  {
+   "word": "source,",
+   "start": 13.837,
+   "end": 14.249
+  },
+  {
+   "word": "and",
+   "start": 14.428,
+   "end": 14.604
+  },
+  {
+   "word": "a",
+   "start": 14.663,
+   "end": 14.722
+  },
+  {
+   "word": "score.",
+   "start": 14.781,
+   "end": 15.134
+  },
+  {
+   "word": "Show",
+   "start": 15.492,
+   "end": 15.728
+  },
+  {
+   "word": "the",
+   "start": 15.786,
+   "end": 15.963
+  },
+  {
+   "word": "top",
+   "start": 16.022,
+   "end": 16.198
+  },
+  {
+   "word": "result",
+   "start": 16.257,
+   "end": 16.61
+  },
+  {
+   "word": "first,",
+   "start": 16.669,
+   "end": 17.022
+  },
+  {
+   "word": "and",
+   "start": 17.201,
+   "end": 17.377
+  },
+  {
+   "word": "cite",
+   "start": 17.436,
+   "end": 17.671
+  },
+  {
+   "word": "its",
+   "start": 17.73,
+   "end": 17.906
+  },
+  {
+   "word": "source.",
+   "start": 17.965,
+   "end": 18.377
+  },
+  {
+   "word": "The",
+   "start": 19.695,
+   "end": 19.871
+  },
+  {
+   "word": "full",
+   "start": 19.93,
+   "end": 20.165
+  },
+  {
+   "word": "reference",
+   "start": 20.224,
+   "end": 20.754
+  },
+  {
+   "word": "is",
+   "start": 20.812,
+   "end": 20.93
+  },
+  {
+   "word": "at",
+   "start": 20.989,
+   "end": 21.106
+  },
+  {
+   "word": "docs",
+   "start": 21.165,
+   "end": 21.401
+  },
+  {
+   "word": "dot",
+   "start": 21.459,
+   "end": 21.636
+  },
+  {
+   "word": "acme",
+   "start": 21.695,
+   "end": 21.93
+  },
+  {
+   "word": "dot",
+   "start": 21.989,
+   "end": 22.165
+  },
+  {
+   "word": "dev.",
+   "start": 22.224,
+   "end": 22.459
+  }
+ ],
+ "segments": [
+  {
+   "id": "s1",
+   "start": 0.25,
+   "end": 3.664
+  },
+  {
+   "id": "s2",
+   "start": 4.982,
+   "end": 10.811
+  },
+  {
+   "id": "s3",
+   "start": 12.129,
+   "end": 18.377
+  },
+  {
+   "id": "s4",
+   "start": 19.695,
+   "end": 22.459
+  }
+ ],
+ "audioSha256": "eed86be8478f1e39049ac7162a642fe192f335d5ee67291920bad4bdeac0ba77"
+}

@@ -1,0 +1,13 @@
+# Secrets
+.env
+
+# Toolchain and build output
+node_modules/
+dist/
+composition/render/.runtime.test.bundle.mjs
+
+# The example's generated files
+examples/*/public/*/
+!examples/*/public/brand/
+examples/*/projects/*/renders/
+examples/*/dist/

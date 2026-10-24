@@ -1,0 +1,6 @@
+{
+  "$comment": "The placeholder voice: offline tone takes, so this example builds and renders without an API key. A real repo names an ElevenLabs voice here.",
+  "voice_id": "oncue-placeholder",
+  "model_id": "oncue-placeholder",
+  "settings": {}
+}

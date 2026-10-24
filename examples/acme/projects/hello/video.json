@@ -1,0 +1,12 @@
+{
+  "id": "hello",
+  "title": "Acme in one minute",
+  "summary": "What the Acme API does, and where to start.",
+  "track": "getting-started",
+  "type": "explainer",
+  "visibility": "preview",
+  "previewReason": "Example video: placeholder narration.",
+  "related": { "doc": "/getting-started", "docLabel": "Getting started" },
+  "updated": "2026-10-24",
+  "approvals": { "product": null }
+}

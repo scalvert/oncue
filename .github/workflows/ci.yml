@@ -1,0 +1,61 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.20.0
+          cache: npm
+
+      - name: ffmpeg and cwebp
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg webp
+
+      - run: npm ci --no-audit --no-fund
+      - run: npm run -s typecheck
+      - run: npm test
+      - name: The example repo passes its checks
+        run: node --conditions=oncue-source ../../src/cli/main.ts check
+        working-directory: examples/acme
+
+  # What a new user does: install the packed tarball, scaffold a repo, and render the starter video
+  # with the offline placeholder voice.
+  fresh-install:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.20.0
+          cache: npm
+
+      - name: ffmpeg and cwebp
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg webp
+
+      - run: npm ci --no-audit --no-fund
+      - name: Pack
+        run: npm pack --pack-destination "$RUNNER_TEMP"
+
+      - name: Scaffold and render
+        working-directory: ${{ runner.temp }}
+        run: |
+          mkdir starter && cd starter
+          npm init -y >/dev/null
+          npm pkg set type=module
+          npm install --no-audit --no-fund "$RUNNER_TEMP"/oncue-*.tgz
+          npx playwright install --with-deps chromium
+          npx oncue init
+          npx oncue doctor
+          npx oncue narrate hello
+          npx oncue render hello
+          npx oncue check --media
+          test -s projects/hello/renders/hello-final.mp4

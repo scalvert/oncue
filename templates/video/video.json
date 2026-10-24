@@ -1,0 +1,15 @@
+{
+  "id": "set-by-oncue-new",
+  "title": "set-by-oncue-new",
+  "summary": "One sentence a developer reads on the card: what they'll be able to do.",
+  "track": "set-by-oncue-new",
+  "type": "explainer",
+  "visibility": "preview",
+  "previewReason": "New: awaiting review.",
+  "related": {
+    "doc": "/path/to/the/page/this/video/attaches/to",
+    "docLabel": "Name of that page"
+  },
+  "updated": "set-by-oncue-new",
+  "approvals": {}
+}

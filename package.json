@@ -1,0 +1,80 @@
+{
+  "name": "oncue",
+  "version": "0.1.0",
+  "description": "Narrated developer videos from real output: write the script, lock the voice-over, and place every visual on its narration cue.",
+  "license": "MIT",
+  "author": "Steve Calvert",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scalvert/oncue.git"
+  },
+  "homepage": "https://github.com/scalvert/oncue#readme",
+  "keywords": [
+    "video",
+    "explainer",
+    "narration",
+    "text-to-speech",
+    "developer-docs",
+    "react",
+    "playwright",
+    "ffmpeg"
+  ],
+  "type": "module",
+  "engines": {
+    "node": ">=22.18.0"
+  },
+  "bin": {
+    "oncue": "./dist/src/cli/main.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "oncue-source": "./src/index.ts",
+      "default": "./dist/src/index.js"
+    },
+    "./engine": {
+      "types": "./dist/src/engine.d.ts",
+      "oncue-source": "./src/engine.ts",
+      "default": "./dist/src/engine.js"
+    },
+    "./capture": {
+      "types": "./dist/src/capture.d.ts",
+      "oncue-source": "./src/capture.ts",
+      "default": "./dist/src/capture.js"
+    },
+    "./composition/*": "./composition/src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "composition",
+    "assets",
+    "templates",
+    "!composition/render/runtime.test.mjs",
+    "!**/*.test.*"
+  ],
+  "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/src/cli/main.js",
+    "prepare": "npm run build",
+    "typecheck": "tsc --noEmit -p . && tsc --noEmit -p composition",
+    "test": "node --conditions=oncue-source --test --test-reporter=dot \"tests/**/*.test.ts\" composition/render/runtime.test.mjs",
+    "oncue": "node --conditions=oncue-source src/cli/main.ts"
+  },
+  "dependencies": {
+    "@vercel/blob": "2.8.1",
+    "commander": "15.0.0",
+    "esbuild": "0.28.1",
+    "playwright": "1.55.0",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "22.20.5",
+    "@types/react": "18.3.31",
+    "@types/react-dom": "18.3.7",
+    "typescript": "5.9.3"
+  },
+  "optionalDependencies": {
+    "node-pty": "1.1.0"
+  }
+}

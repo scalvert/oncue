@@ -1,0 +1,4 @@
+s1	Here's one search call to the Acme API, start to finish.
+s2	Post a query to slash v one slash search. The response comes back in about forty milliseconds.
+s3	Each result has a title, a source, and a score. Show the top result first, and cite its source.
+s4	The full reference is at docs dot acme dot dev.

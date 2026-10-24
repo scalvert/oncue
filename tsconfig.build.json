@@ -1,0 +1,15 @@
+{
+  // The published package: src/ (and the composition's props and theme modules it imports) to
+  // dist/, with .ts import extensions rewritten to .js and declarations alongside.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "rootDir": ".",
+    "outDir": "dist",
+    "declaration": true,
+    "sourceMap": true,
+    "rewriteRelativeImportExtensions": true
+  },
+  "include": ["src"],
+  "exclude": ["**/*.test.ts"]
+}

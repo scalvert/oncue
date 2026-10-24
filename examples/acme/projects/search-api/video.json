@@ -1,0 +1,13 @@
+{
+  "id": "search-api",
+  "title": "One search call",
+  "summary": "Send a query to the Acme search API and read the ranked results.",
+  "track": "api",
+  "type": "walkthrough",
+  "visibility": "preview",
+  "previewReason": "Example video: placeholder narration.",
+  "series": { "id": "search", "position": 1 },
+  "related": { "doc": "/api/search", "docLabel": "Search API" },
+  "updated": "2026-10-24",
+  "approvals": { "product": null, "legal": null }
+}
