@@ -45,6 +45,38 @@ The starter voice is a placeholder that makes tones instead of speech. It lets y
 render without an account. Release checks reject it. For real narration, set `catalog/voice.json` to
 an ElevenLabs voice and put `ELEVENLABS_API_KEY` in `.env`.
 
+## Making a video with an AI agent
+
+You don't need to use the terminal. Open the repo in a coding agent (Claude Code, Codex, Cursor,
+Glean, and others) and say what video you want. `oncue init` writes an `AGENTS.md` that tells the
+agent how to work with you:
+
+1. You say what the video is about and who it's for. The agent drafts the script and reads it back.
+2. You approve the script. The agent records the narration, after asking, because a real voice
+   costs money.
+3. You listen. The agent can't hear audio, so you check names and acronyms.
+4. The agent renders the video and opens a review page (`oncue review`): the video, the script with
+   timestamps, the words to listen for, and a feedback box for each scene.
+5. You approve it or paste your feedback back. The agent repeats until you approve, then records the
+   sign-offs you collect.
+
+The agent finds each step with `oncue next --json`. It reports every video's stage (script, narrate,
+render, review, sign-off, deploy) and the next steps, each marked `agent` or `person`. Steps that
+cost money or change what's published are marked `ask`, so the agent checks with you first. People
+can run `oncue next` too:
+
+```text
+$ npx oncue next hello
+Acme in one minute (hello): The first render is ready for review.
+  1. Agent: Open the review page for the person.
+       oncue review hello
+  2. You: Watch and listen to the whole video. Say what to change, or approve it.
+  3. Agent: Once the person approves, accept the render with their note. (ask first)
+       oncue registry --accept hello --note "<the person's reason>"
+```
+
+The agent never handles API keys. You put them in `.env` yourself.
+
 ## How it works
 
 Each video is a folder under `projects/`:
@@ -71,7 +103,9 @@ scene s2. If you rewrite a line, the visuals move with the new take.
 |---|---|
 | `oncue init [dir]` | Scaffold a repo: config, catalog, voice, and a starter video |
 | `oncue new <folder> --id <id> --title <title>` | Add a video from the template |
-| `oncue doctor` | Check the toolchain and the voice setup |
+| `oncue next [video] [--json]` | What each video needs now, and who does it (start here) |
+| `oncue review <video>` | A review page for the approver: the video, the script, words to listen for |
+| `oncue doctor [--json]` | Check the toolchain and the voice setup, with a fix for each problem |
 | `oncue narrate <video>` | Record and lock the narration |
 | `oncue build <video>` | Locked narration to props (no voice calls) |
 | `oncue render <video>` | Build, then render the MP4, poster, and QA contact sheet |
@@ -82,6 +116,7 @@ scene s2. If you rewrite a line, the visuals move with the new take.
 | `oncue deploy` / `oncue status` | Upload accepted media to the media store, and report what's live |
 
 `<video>` is a folder under `projects/` or a video id. `--all` works wherever a video is accepted.
+`list`, `check`, `status`, `next`, and `doctor` take `--json` for agents and scripts.
 
 ## Configuration
 

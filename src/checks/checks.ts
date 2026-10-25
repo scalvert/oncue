@@ -175,6 +175,13 @@ export function checkRelease(p: Pick<Project, "name" | "meta">, kinds: Record<st
   if (missing.length) r.err(p.name, `public, but approvals not recorded: ${missing.join(", ")}`);
 }
 
+/** Only the video.json and catalog checks (what `next` reports as fixes). */
+export function metadataCheck(ws: Workspace, p: Project): Report {
+  const r = new Report();
+  checkMeta(p, ws.catalog(), ws.config, r);
+  return r;
+}
+
 /** The quick checks `list` shows: metadata and narration, no file scans or media. */
 export function quickCheck(ws: Workspace, p: Project): Report {
   const r = new Report();

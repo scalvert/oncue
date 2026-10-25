@@ -43,8 +43,24 @@ export function initRepo(dir: string, name = basename(resolve(dir))): string[] {
     // ES modules, so Node runs the TypeScript config and build scripts without a warning.
     writeFileSync(pkg, dumps({ name: basename(resolve(dir)).toLowerCase().replace(/[^a-z0-9-]+/g, "-"), private: true, type: "module" }, { indent: 2 }) + "\n");
     out.push("package.json");
+  } else if (canSetModuleType(dir)) {
+    // A fresh repo (npm init, then npm install) has a package.json with no type yet.
+    const meta = JSON.parse(readFileSync(pkg, "utf8")) as Record<string, unknown>;
+    writeFileSync(pkg, JSON.stringify({ ...meta, type: "module" }, null, 2) + "\n");
+    out.push("package.json");
   }
   return out.sort();
+}
+
+/**
+ * Whether setting `"type": "module"` is safe: package.json has no type, no `main`, and the folder
+ * has no top-level JavaScript (which the change could break).
+ */
+function canSetModuleType(dir: string): boolean {
+  const meta = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")) as { type?: string; main?: string };
+  if (meta.type) return false;
+  if (meta.main && existsSync(join(dir, meta.main))) return false;
+  return !readdirSync(dir).some((f) => /\.(c?js|jsx)$/.test(f));
 }
 
 /** Whether the repo's package.json makes .ts files ES modules (else Node warns on every run). */

@@ -13,6 +13,8 @@
  * and accepting it records that (no new version). RENDER flags a render in projects/
  * that isn't accepted yet. DEPLOY checks the media host for the version's files. SITE (--site)
  * reads the registry snapshot the site last synced (config `site`, read with `gh`).
+ *
+ * `assess` computes all of it as data (`status --json`, and `next` reads it); `status` prints it.
  */
 import { existsSync } from "node:fs";
 import { fail } from "../core/errors.ts";
@@ -45,15 +47,6 @@ function siteRegistry(site: { repo: string; snapshot: string }): Registry | null
   return r.status === 0 ? (JSON.parse(r.stdout) as Registry) : null;
 }
 
-export interface StatusOptions {
-  /** Rebuild every project's props first, so SOURCE reflects the current scripts. */
-  rebuild?: () => Promise<void>;
-  site?: boolean;
-  /** CI: only check that every hosted version is deployed. */
-  check?: boolean;
-  log?: (line: string) => void;
-}
-
 /** Whether the render in projects/ was made from the current sources (its sidecar says so). */
 function freshRender(output: string, poster: string, sidecar: string, now: Fingerprint): boolean {
   if (!existsSync(output) || !existsSync(poster)) return false;
@@ -61,13 +54,52 @@ function freshRender(output: string, poster: string, sidecar: string, now: Finge
   return fp !== null && jsonEqual(fp, now);
 }
 
-/** Left-aligned columns, two spaces apart, without trailing spaces. */
-export function table(rows: string[][]): string[] {
-  const widths = rows[0]!.map((_, i) => Math.max(...rows.map((r) => [...r[i]!].length)));
-  return rows.map((r) => r.map((x, i) => x + " ".repeat(widths[i]! - [...x].length)).join("  ").trimEnd());
+/** One video's release state. */
+export interface VideoState {
+  id: string;
+  /** The project folder under projects/. */
+  folder: string;
+  /** The accepted version, or null if it was never accepted. */
+  version: number | null;
+  visibility: string;
+  /**
+   * How the sources compare with the accepted version:
+   *   up-to-date   the accepted files came from these sources
+   *   reproduced   the render in projects/ came from these sources and has the accepted bytes
+   *   rendered     the sources changed, and the render in projects/ is from the new sources
+   *   re-render    the sources changed since the render (or there is no render)
+   *   unknown      the accepted version has no fingerprint
+   *   unaccepted   never accepted
+   *   unchecked    `check` mode skips it
+   */
+  source: "up-to-date" | "reproduced" | "rendered" | "re-render" | "unknown" | "unaccepted" | "unchecked";
+  /** What changed, for re-render / rendered / reproduced. */
+  changed: ("inputs" | "renderer")[];
+  /** Whether projects/ holds a render that isn't the accepted one. */
+  renderWaiting: boolean;
+  /** Whether projects/ holds a render at all. */
+  rendered: boolean;
+  /** deployed, missing (hosted but not on the store), held (sign-offs), no-host (never deployed), unlisted, unchecked (offline). */
+  deploy: "deployed" | "missing" | "held" | "no-host" | "unlisted" | "unchecked";
+  /** The sign-offs holding hosting. */
+  heldBy: string[];
+  /** The accepted MP4 on the media store, when there is one. */
+  acceptedUrl?: string;
+  /** The version the site has (--site): "v3", "?", or null when it has none. */
+  site?: string | null;
 }
 
-export async function status(ws: Workspace, { rebuild, site = false, check = false, log = console.log }: StatusOptions = {}): Promise<void> {
+export interface AssessOptions {
+  /** Rebuild every project's props first, so `source` reflects the current scripts. */
+  rebuild?: () => Promise<void>;
+  site?: boolean;
+  /** CI: only check that every hosted version is deployed. */
+  check?: boolean;
+  /** Skip the media host (no network). */
+  offline?: boolean;
+}
+
+export async function assess(ws: Workspace, { rebuild, site = false, check = false, offline = false }: AssessOptions = {}): Promise<VideoState[]> {
   const data = loadRegistry(ws.paths.registry) ?? ({ videos: [] } as unknown as Registry);
   const ledger = loadLedger(ws.paths.ledger, ws.config.ledger.comment);
   const cat = ws.catalog();
@@ -86,82 +118,122 @@ export async function status(ws: Workspace, { rebuild, site = false, check = fal
     }
   }
 
-  const rows: string[][] = [];
-  const todo = { render: [] as string[], accept: [] as string[], record: [] as string[], site: [] as string[] };
-  const undeployed: string[] = [];
+  const out: VideoState[] = [];
   const listed = new Set(data.videos.map((v) => v.id));
   for (const v of data.videos) {
     const p = projects.get(v.id);
     if (!p) fail(`registry.json lists ${v.id}, which has no project`);
     const m = v.media;
     const ver = latest(ledger, v.id, m.sha256, m.posterSha256);
-    const label = ver ? `v${ver.version}` : "v?";
+    const s: VideoState = {
+      id: v.id,
+      folder: p.name,
+      version: ver?.version ?? null,
+      visibility: String(v.visibility ?? ""),
+      source: "unchecked",
+      changed: [],
+      renderWaiting: false,
+      rendered: existsSync(p.output),
+      deploy: "no-host",
+      heldBy: [],
+      ...(base && m.file ? { acceptedUrl: `${base}/${m.file}` } : {}),
+    };
 
-    let source = "-";
     if (!check) {
       const known = knownFingerprints(ver ?? {});
-      if (!known.length) source = "unknown (no fingerprint)";
+      if (!known.length) s.source = "unknown";
       else {
         const now: Fingerprint = { inputs: inputsFingerprint(p), renderer: rendererNow! };
         const fp = known.find((k) => jsonEqual(k, now)) ?? known.at(-1)!;
-        const changed = (["inputs", "renderer"] as const).filter((k) => now[k] !== fp[k]);
+        s.changed = (["inputs", "renderer"] as const).filter((k) => now[k] !== fp[k]);
         const fresh = freshRender(p.output, p.poster, p.sidecar, now);
-        if (!changed.length) source = "up to date";
-        else if (fresh && sha256File(p.output) === m.sha256 && sha256File(p.poster) === m.posterSha256) {
-          source = "reproduced, not recorded";
-          todo.record.push(v.id);
-        } else if (fresh) {
-          source = `changed: ${changed.join(", ")}; rendered`; // RENDER says what to do with it
-        } else {
-          source = `re-render: ${changed.join(", ")}`;
-          todo.render.push(p.name);
-        }
+        if (!s.changed.length) s.source = "up-to-date";
+        else if (fresh && sha256File(p.output) === m.sha256 && sha256File(p.poster) === m.posterSha256) s.source = "reproduced";
+        else s.source = fresh ? "rendered" : "re-render";
       }
+      s.renderWaiting = s.rendered && sha256File(p.output) !== m.sha256;
     }
 
-    let render = "-";
-    if (!check && existsSync(p.output) && sha256File(p.output) !== m.sha256) {
-      render = "new render waiting";
-      todo.accept.push(v.id);
-    }
+    if (!v.hosted) {
+      s.deploy = "held";
+      s.heldBy = heldBy(p.meta, ws.config.metadata.approvals);
+    } else if (!base) s.deploy = "no-host";
+    else if (offline) s.deploy = "unchecked";
+    else s.deploy = (await exists(`${base}/${m.file}`)) && (await exists(`${base}/${m.poster}`)) ? "deployed" : "missing";
 
-    let deploy: string;
-    if (!v.hosted) deploy = `held: ${heldBy(p.meta, ws.config.metadata.approvals).join(", ")}`;
-    else if (!base) deploy = "no host yet";
-    else if ((await exists(`${base}/${m.file}`)) && (await exists(`${base}/${m.poster}`))) deploy = "deployed";
-    else {
-      deploy = "NOT deployed";
-      undeployed.push(v.id);
-    }
-
-    let live = "-";
-    if (site) {
-      live = siteVer.get(v.id) ?? "-";
-      if (v.hosted && live !== label) {
-        live = live !== "-" ? `${live} (behind)` : "not on site";
-        todo.site.push(v.id);
-      }
-    }
-    rows.push([v.id, label, String(v.visibility ?? ""), source, render, deploy, live]);
+    if (site) s.site = siteVer.get(v.id) ?? null;
+    out.push(s);
   }
 
   for (const [id, p] of projects) {
-    if (!listed.has(id) && cat.order.includes(id)) rows.push([id, "-", String(p.meta.visibility ?? ""), "-", "never accepted", "-", "-"]);
+    if (listed.has(id) || !cat.order.includes(id)) continue;
+    out.push({
+      id,
+      folder: p.name,
+      version: null,
+      visibility: String(p.meta.visibility ?? ""),
+      source: "unaccepted",
+      changed: [],
+      renderWaiting: existsSync(p.output),
+      rendered: existsSync(p.output),
+      deploy: "unlisted",
+      heldBy: heldBy(p.meta, ws.config.metadata.approvals),
+    });
   }
+  return out;
+}
 
+export interface StatusOptions extends AssessOptions {
+  log?: (line: string) => void;
+}
+
+/** Left-aligned columns, two spaces apart, without trailing spaces. */
+export function table(rows: string[][]): string[] {
+  const widths = rows[0]!.map((_, i) => Math.max(...rows.map((r) => [...r[i]!].length)));
+  return rows.map((r) => r.map((x, i) => x + " ".repeat(widths[i]! - [...x].length)).join("  ").trimEnd());
+}
+
+const SOURCE_LABEL: Record<VideoState["source"], (s: VideoState) => string> = {
+  "up-to-date": () => "up to date",
+  reproduced: () => "reproduced, not recorded",
+  rendered: (s) => `changed: ${s.changed.join(", ")}; rendered`,
+  "re-render": (s) => `re-render: ${s.changed.join(", ")}`,
+  unknown: () => "unknown (no fingerprint)",
+  unaccepted: () => "-",
+  unchecked: () => "-",
+};
+
+export async function status(ws: Workspace, o: StatusOptions = {}): Promise<VideoState[]> {
+  const log = o.log ?? console.log;
+  const states = await assess(ws, o);
+  const site = o.site ?? false;
+  const base = (ws.catalog().mediaBaseUrl ?? "").replace(/\/+$/, "");
+
+  const rows = states.map((s) => {
+    const render = s.source === "unaccepted" ? "never accepted" : s.renderWaiting ? "new render waiting" : "-";
+    const deploy = { deployed: "deployed", missing: "NOT deployed", held: `held: ${s.heldBy.join(", ")}`, "no-host": "no host yet", unlisted: "-", unchecked: "not checked" }[s.deploy];
+    const live = !site || s.deploy === "unlisted" ? "-" : s.deploy !== "held" && s.site !== `v${s.version}` ? (s.site ? `${s.site} (behind)` : "not on site") : (s.site ?? "-");
+    return [s.id, s.version ? `v${s.version}` : s.source === "unaccepted" ? "-" : "v?", s.visibility, SOURCE_LABEL[s.source](s), render, deploy, live];
+  });
   const head = ["VIDEO", "VER", "VISIBILITY", "SOURCE", "RENDER", "DEPLOY", ...(site ? ["SITE"] : [])];
   for (const line of table([head, ...rows.map((r) => r.slice(0, head.length))])) log(line);
 
-  if (check) {
+  const undeployed = states.filter((s) => s.deploy === "missing").map((s) => s.id);
+  if (o.check) {
     if (undeployed.length) fail(`\nNot on the media host: ${undeployed.join(", ")}. Run ${cmd("deploy")} (needs the token) and push again.`);
-    return;
+    return states;
   }
+  const render = states.filter((s) => s.source === "re-render").map((s) => s.folder);
+  const accept = states.filter((s) => s.renderWaiting && s.source !== "unaccepted").map((s) => s.id);
+  const record = states.filter((s) => s.source === "reproduced").map((s) => s.id);
+  const behind = states.filter((s) => site && s.deploy !== "held" && s.deploy !== "unlisted" && s.site !== `v${s.version}`);
   const next: string[] = [];
-  if (todo.render.length) next.push(`${cmd(`render ${todo.render.join(" ")}`)}    # sources changed since the accepted version`);
-  if (todo.accept.length) next.push(`${cmd("compare <video> <accepted.mp4>")}, then ${cmd(`registry --accept ${todo.accept.join(" ")} --note '...'`)}`);
-  if (todo.record.length) next.push(`${cmd(`registry --accept ${todo.record.join(" ")} --note '...'`)}    # same files from the current sources: records it, no new version`);
+  if (render.length) next.push(`${cmd(`render ${render.join(" ")}`)}    # sources changed since the accepted version`);
+  if (accept.length) next.push(`${cmd("compare <video> <accepted.mp4>")}, then ${cmd(`registry --accept ${accept.join(" ")} --note '...'`)}`);
+  if (record.length) next.push(`${cmd(`registry --accept ${record.join(" ")} --note '...'`)}    # same files from the current sources: records it, no new version`);
   if (undeployed.length) next.push(cmd("deploy"));
-  if (!base && data.videos.some((v) => v.hosted)) next.push(`${cmd("deploy")}    # first deploy: needs the media store's token in .env; sets mediaBaseUrl`);
-  if (todo.site.length) next.push("run the site's registry sync and merge its PR");
+  if (!base && states.some((s) => s.deploy === "no-host")) next.push(`${cmd("deploy")}    # first deploy: needs the media store's token in .env; sets mediaBaseUrl`);
+  if (behind.length) next.push("run the site's registry sync and merge its PR");
   log(next.length ? `\nnext:\n  ${next.join("\n  ")}` : "\nEverything is up to date.");
+  return states;
 }

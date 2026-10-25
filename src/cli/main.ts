@@ -23,8 +23,13 @@ import { poster, rendererFor, renderProject } from "../pipeline/render.ts";
 import { deploy } from "../release/deploy.ts";
 import * as registry from "../release/registry.ts";
 import { saveLedger } from "../release/versions.ts";
-import { status } from "../release/status.ts";
+import { assess, status } from "../release/status.ts";
 import { doctor } from "../workspace/doctor.ts";
+import { formatNext, next } from "../workflow/next.ts";
+import { writeReview } from "../workflow/review.ts";
+import { readLock, staleness } from "../narration/lock.ts";
+import { expectedNarration } from "../checks/checks.ts";
+import { openPath } from "../core/open.ts";
 import { initRepo, isEsmRepo, newVideo } from "../workspace/scaffold.ts";
 import { Workspace } from "../workspace/workspace.ts";
 
@@ -46,7 +51,8 @@ if (found) loadEnv(found.paths.env);
 const repo = (): Workspace => found ?? fail(`no oncue.config.ts here or in any parent folder. Run ${cmd("init")} to create one.`);
 const rel = (p: string) => relative(found?.root ?? process.cwd(), p);
 const heading = (name: string) => console.log(`\n=== ${name}`);
-const home = (p: string) => resolve(p.replace(/^~(?=\/)/, process.env.HOME ?? "~"));
+/** A path from the command line (~ expanded), or a URL as is (ffmpeg reads https). */
+const home = (p: string) => (/^https?:\/\//.test(p) ? p : resolve(p.replace(/^~(?=\/)/, process.env.HOME ?? "~")));
 
 const program = new Command(found?.config.cli.name ?? "oncue")
   .description(found?.config.cli.description ?? "Narrated developer videos. <video> is a folder under projects/ or a video id.")
@@ -78,6 +84,10 @@ program
         "  npx playwright install chromium",
         "  npx oncue doctor",
         "  npx oncue narrate hello && npx oncue render hello",
+        "  npx oncue next                      # what each video needs, and who does it",
+        "",
+        "Working with an AI agent? Open this folder in it and say what video you want. AGENTS.md tells",
+        "it how to guide you; it starts with `npx oncue next`.",
         "",
         "The house voice is a placeholder (tones), so that works offline. For a real voice, set",
         "catalog/voice.json to an ElevenLabs voice and put ELEVENLABS_API_KEY in .env (see .env.example).",
@@ -87,18 +97,31 @@ program
 
 program
   .command("doctor")
-  .description("check this machine and repo: Node, ffmpeg, cwebp, Chromium, keys")
-  .action(async () => {
+  .description("check this machine and repo: Node, ffmpeg, cwebp, Chromium, keys; says how to fix each")
+  .option("--json", "machine-readable findings, each with a `fix` command")
+  .action(async (o: { json?: boolean }) => {
     const findings = await doctor();
-    for (const f of findings) console.log(`${f.ok ? "ok     " : f.optional ? "skip   " : "MISSING"} ${padEnd(f.what, 22)} ${f.detail}`);
     process.exitCode = findings.some((f) => !f.ok && !f.optional) ? 1 : 0;
+    if (o.json) return console.log(JSON.stringify(findings, null, 2));
+    for (const f of findings) {
+      console.log(`${f.ok ? "ok     " : f.optional ? "skip   " : "MISSING"} ${padEnd(f.what, 22)} ${f.detail}`);
+      if (!f.ok && f.fix) console.log(`        fix: ${f.fix}`);
+    }
   });
 
 program
   .command("list")
   .description("every video, its status, and what's blocking it")
-  .action(() => {
+  .option("--json", "machine-readable")
+  .action((o: { json?: boolean }) => {
     const ws = repo();
+    if (o.json) {
+      const out = ws.projects().map((p) => {
+        const r = quickCheck(ws, p);
+        return { folder: p.name, id: p.id, title: p.meta.title, visibility: p.meta.visibility, rendered: existsSync(p.output), errors: r.errors, warnings: r.warnings };
+      });
+      return console.log(JSON.stringify(out, null, 2));
+    }
     console.log(`${padEnd("folder", 24)} ${padEnd("id", 18)} ${padEnd("vis", 8)} ${padEnd("render", 7)} status`);
     for (const p of ws.projects()) {
       const r = quickCheck(ws, p);
@@ -169,7 +192,7 @@ program
   .command("compare")
   .description("same video? (SSIM >= 0.999, identical audio, same length); exits 1 if not")
   .argument("<video>", "folder or id: compares its current render")
-  .argument("<other>", "the MP4 to compare against (an accepted version, say)")
+  .argument("<other>", "the MP4 (path or URL) to compare against: an accepted version, say")
   .option("--frames <dir>", "list visibly different frames and save side-by-sides to DIR")
   .action((video: string, other: string, o: { frames?: string }) => {
     const p = repo().resolve([video])[0]!;
@@ -198,10 +221,13 @@ program
   .option("--all", "the default when no videos are named")
   .option("--media", "also check renders (resolution, duration, loudness)")
   .option("--release", "also require recorded approvals for public videos")
-  .action((videos: string[], o: { media?: boolean; release?: boolean }) => {
+  .option("--json", "machine-readable: {errors, warnings}")
+  .action((videos: string[], o: { media?: boolean; release?: boolean; json?: boolean }) => {
     const ws = repo();
     const ps = ws.resolve(videos, videos.length === 0);
     const r = check(ws, ps, { media: o.media, release: o.release });
+    process.exitCode = r.errors.length ? 1 : 0;
+    if (o.json) return console.log(JSON.stringify({ videos: ps.length, errors: r.errors, warnings: r.warnings }, null, 2));
     for (const w of r.warnings) console.log(`warn   ${w}`);
     for (const e of r.errors) console.log(`ERROR  ${e}`);
     console.log(`\n${ps.length} video(s): ${r.errors.length} error(s), ${r.warnings.length} warning(s)`);
@@ -259,9 +285,11 @@ program
   .option("--site", "also show which version the live site has (needs gh and config `site`)")
   .option("--no-build", "don't rebuild props first (source column may be stale)")
   .option("--check", "CI: fail if a hosted version isn't deployed")
-  .action((o: { site?: boolean; build: boolean; check?: boolean }) => {
+  .option("--json", "machine-readable state per video")
+  .action(async (o: { site?: boolean; build: boolean; check?: boolean; json?: boolean }) => {
     const ws = repo();
-    return status(ws, {
+    const states = await status(ws, {
+      log: o.json ? () => {} : undefined,
       site: o.site,
       check: o.check,
       rebuild:
@@ -275,6 +303,45 @@ program
             }
           : undefined,
     });
+    if (o.json) console.log(JSON.stringify(states, null, 2));
+  });
+
+program
+  .command("next")
+  .description("what each video needs now, in plain words, and who does it (start here)")
+  .argument("[videos...]", "folders or ids (default: every video)")
+  .option("--json", "machine-readable steps, for agents")
+  .option("--offline", "don't check the media store")
+  .action(async (videos: string[], o: { json?: boolean; offline?: boolean }) => {
+    const ws = repo();
+    const ps = ws.resolve(videos, videos.length === 0);
+    const buildErrors = new Map<string, string>();
+    for (const p of ps) {
+      // Rebuild only once the take is current (a build needs it), so the state below is fresh.
+      const { text, voice } = expectedNarration(ws, p);
+      if (staleness(readLock(p.lock), text, voice, existsSync(p.take))) continue;
+      try {
+        await buildProject(ws, p, { mode: "frozen", log: () => {} });
+      } catch (e) {
+        buildErrors.set(p.id, (e as Error).message.split("\n")[0]!);
+      }
+    }
+    const states = new Map((await assess(ws, { offline: o.offline })).map((s) => [s.id, s]));
+    const reports = ps.map((p) => next(ws, p, states.get(p.id), buildErrors.get(p.id)));
+    if (o.json) return console.log(JSON.stringify(reports, null, 2));
+    console.log(reports.map(formatNext).join("\n\n"));
+  });
+
+program
+  .command("review")
+  .description("a review page for the person approving a video: the render, the script, words to listen for")
+  .argument("<video>", "folder or id")
+  .option("--no-open", "write the page without opening it")
+  .action((video: string, o: { open: boolean }) => {
+    const ws = repo();
+    const page = writeReview(ws, ws.resolve([video])[0]!);
+    console.log(`review page: ${rel(page)}`);
+    if (o.open) openPath(page);
   });
 
 const capture = program.command("capture").description("record real assets: CLI output in a TTY, 2x page captures");
