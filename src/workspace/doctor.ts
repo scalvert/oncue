@@ -94,7 +94,8 @@ export async function doctor(from: string = process.cwd()): Promise<Finding[]> {
   }
   out.push({
     ok: Boolean(process.env.ELEVENLABS_API_KEY),
-    optional: placeholder,
+    // Only `narrate` needs it: building, rendering, and checking use the locked takes.
+    optional: true,
     what: "ELEVENLABS_API_KEY",
     detail: placeholder
       ? "not needed yet: the house voice is the offline placeholder"
