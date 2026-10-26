@@ -13,6 +13,7 @@ import { run } from "../core/exec.ts";
 import { loadEnv } from "../core/files.ts";
 import { packageRoot } from "../core/program.ts";
 import { isPlaceholder } from "../narration/placeholder.ts";
+import { SKILLS_DIR, skillStates } from "./skills.ts";
 
 export interface Finding {
   ok: boolean;
@@ -84,6 +85,21 @@ export async function doctor(from: string = process.cwd()): Promise<Finding[]> {
     const voiceFile = join(root, "catalog", "voice.json");
     const voice = existsSync(voiceFile);
     out.push({ ok: voice, what: "house voice", detail: "catalog/voice.json", fix: "npx oncue init (writes the placeholder voice)" });
+    for (const s of skillStates(root)) {
+      out.push({
+        ok: s.state === "current",
+        // Agents work without it; it's how they learn the workflow.
+        optional: true,
+        what: `agent skill ${s.name}`,
+        detail:
+          s.state === "current"
+            ? `${SKILLS_DIR}/${s.name} matches this oncue`
+            : s.state === "missing"
+              ? `not in ${SKILLS_DIR}; agents learn the workflow from it`
+              : `${SKILLS_DIR}/${s.name} differs from this oncue's (an upgrade, or a local edit it would replace)`,
+        fix: "npx oncue skills",
+      });
+    }
     if (voice) {
       try {
         placeholder = isPlaceholder(JSON.parse(readFileSync(voiceFile, "utf8")) as { voice_id: string });

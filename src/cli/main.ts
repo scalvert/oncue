@@ -31,6 +31,7 @@ import { readLock, staleness } from "../narration/lock.ts";
 import { expectedNarration } from "../checks/checks.ts";
 import { openPath } from "../core/open.ts";
 import { initRepo, isEsmRepo, newVideo } from "../workspace/scaffold.ts";
+import { installSkills, SKILLS_DIR, skillStates } from "../workspace/skills.ts";
 import { Workspace } from "../workspace/workspace.ts";
 
 async function loadRepo(): Promise<Workspace | null> {
@@ -86,13 +87,29 @@ program
         "  npx oncue narrate hello && npx oncue render hello",
         "  npx oncue next                      # what each video needs, and who does it",
         "",
-        "Working with an AI agent? Open this folder in it and say what video you want. AGENTS.md tells",
-        "it how to guide you; it starts with `npx oncue next`.",
+        "Working with an AI agent? Open this folder in it and say what video you want. AGENTS.md and",
+        `the make-video skill (${SKILLS_DIR}/make-video) tell it how to guide you.`,
         "",
         "The house voice is a placeholder (tones), so that works offline. For a real voice, set",
         "catalog/voice.json to an ElevenLabs voice and put ELEVENLABS_API_KEY in .env (see .env.example).",
       ].join("\n"),
     );
+  });
+
+program
+  .command("skills")
+  .description(`install or refresh the agent skills oncue ships (into ${SKILLS_DIR}); run after upgrading oncue`)
+  .option("--dir <dir>", "where to put them, relative to the repo", SKILLS_DIR)
+  .option("--check", "exit 1 if a copy is missing or differs from this oncue's; write nothing")
+  .action((o: { dir: string; check?: boolean }) => {
+    const root = findRoot(process.cwd()) ?? fail("not in an oncue repo (no oncue.config.ts here or above); run `npx oncue init`");
+    if (o.check) {
+      const states = skillStates(root, o.dir);
+      for (const s of states) console.log(`${padEnd(s.state, 8)} ${o.dir}/${s.name}`);
+      process.exitCode = states.every((s) => s.state === "current") ? 0 : 1;
+      return;
+    }
+    for (const f of installSkills(root, o.dir)) console.log(`wrote ${f}`);
   });
 
 program

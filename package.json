@@ -50,6 +50,8 @@
     "composition",
     "assets",
     "templates",
+    "skills",
+    "docs",
     "!composition/render/runtime.test.mjs",
     "!**/*.test.*"
   ],
