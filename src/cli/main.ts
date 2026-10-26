@@ -366,20 +366,20 @@ const collect = (v: string, prev: string[]) => [...prev, v];
 
 capture
   .command("cli")
-  .description("run a recipe CLI in a real TTY against the replay server; save its exact output")
-  .requiredOption("--cwd <dir>", "the recipe directory")
-  .requiredOption("--scenario <file>", "replay server routes (see `capture serve`)")
-  .requiredOption("--out <file>", "where the output goes; requests go to <out>.requests.log")
+  .description("run a command in a real TTY, with the replay server up for anything it calls; save its exact output")
+  .requiredOption("--cwd <dir>", "where to run the command")
+  .option("--scenario <file>", "replay server routes, for a command that calls a service (see `capture serve`)")
+  .requiredOption("--out <file>", "where the output goes; with a scenario, requests go to <out>.requests.log")
   .requiredOption("--cmd <command>", "the command to run (bash -c)")
   .option("--answer <PROMPT=REPLY>", "type REPLY after PROMPT appears (repeatable)", collect, [])
   .option("--port <port>", "replay server port", "8787")
   .option("--env <KEY=VALUE>", "extra environment for the CLI (repeatable)", collect, [])
   .option("--timeout <seconds>", "give up after this long", Number, 60)
-  .action(async (o: { cwd: string; scenario: string; out: string; cmd: string; answer: string[]; port: string; env: string[]; timeout: number }) => {
+  .action(async (o: { cwd: string; scenario?: string; out: string; cmd: string; answer: string[]; port: string; env: string[]; timeout: number }) => {
     const { captureCli } = await import("../capture/cli.ts");
     const r = await captureCli({ ...o, answers: o.answer, timeoutMs: o.timeout * 1000 });
     console.log(r.text);
-    console.log(`[exit ${r.exitCode}] requests logged to ${r.log}`);
+    console.log(`[exit ${r.exitCode}]${r.log ? ` requests logged to ${r.log}` : ""}`);
   });
 
 capture
