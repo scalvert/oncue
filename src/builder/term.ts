@@ -51,7 +51,8 @@ export class Term {
   /** Streamed model output: wrapped like a terminal would wrap it, and revealed progressively. */
   stream(text: string, opts: { at?: At; width?: number; cs?: number; gap?: number } = {}): this {
     const { width = 86, cs = 0.022, gap = 0.05 } = opts;
-    const lines = wrap(text, width);
+    // Wrap each line on its own, so the text's own line breaks and blank lines survive.
+    const lines = text.split("\n").flatMap((ln) => (ln.trim() ? wrap(ln, width) : [""]));
     (lines.length ? lines : [""]).forEach((ln, i) => {
       const a = this.#at(i === 0 ? opts.at : null);
       this.steps.push({ kind: "cmd", at: a, text: ln, prefix: "", plain: true, charSeconds: cs } as TermStep);
