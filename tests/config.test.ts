@@ -8,7 +8,7 @@ import { exampleConfig, sandbox } from "./helpers.ts";
 
 test("an empty config is a working default", () => {
   const c = resolveConfig();
-  assert.equal(c.cli.name, "oncue");
+  assert.equal(c.cli.name, "npx oncue");
   assert.equal(c.paths.public, "public");
   assert.deepEqual(c.theme, defaultTheme);
   assert.deepEqual(c.metadata.approvals, {});

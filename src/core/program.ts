@@ -2,9 +2,9 @@ import { existsSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-let name = "oncue";
+let name = "npx oncue";
 
-/** The command name messages tell people to run: "oncue" unless the repo's config renames it. */
+/** The command name messages tell people to run: "npx oncue" unless the repo's config renames it. */
 export function programName(): string {
   return name;
 }

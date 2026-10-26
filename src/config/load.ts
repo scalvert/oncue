@@ -45,7 +45,8 @@ export interface ResolvedConfig {
 }
 
 export function resolveConfig(c: OncueConfig = {}): ResolvedConfig {
-  const name = c.cli?.name ?? "oncue";
+  // How a repo with oncue as a dev dependency runs it; there's no global `oncue`.
+  const name = c.cli?.name ?? "npx oncue";
   return {
     cli: { name, description: c.cli?.description ?? "Narrated developer videos. <video> is a folder under projects/ or a video id." },
     paths: {

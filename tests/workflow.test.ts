@@ -39,7 +39,7 @@ test("a changed script needs a new take; the placeholder voice needs no OK or ke
   assert.equal(r.stage, "narrate");
   assert.match(r.summary, /the script changed/);
   const narrate = r.steps.find((s) => s.command?.includes("narrate hello"))!;
-  assert.equal(narrate.command, "oncue narrate hello"); // as is, no backticks
+  assert.equal(narrate.command, "npx oncue narrate hello"); // as is, no backticks
   assert.ok(!narrate.ask);
   assert.ok(!r.steps.some((s) => s.what.includes("ELEVENLABS_API_KEY")));
   assert.ok(r.later.some((l) => l.includes("placeholder")));

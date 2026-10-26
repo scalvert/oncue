@@ -40,7 +40,7 @@ export default defineConfig({
 
 | Field | Default | What it sets |
 |---|---|---|
-| `cli.name` | `"oncue"` | The command shown in messages, such as `Run ./vid narrate hello`. Use it when a wrapper script runs oncue |
+| `cli.name` | `"npx oncue"` | The command shown in messages, such as `Run ./vid narrate hello`. Use it when oncue is installed globally (`"oncue"`) or a wrapper script runs it |
 | `cli.description` | | The `--help` description |
 | `paths.projects` | `"projects"` | One folder per video |
 | `paths.catalog` | `"catalog"` | `catalog.json` (series and order), `voice.json`, and an optional `spoken.json` |
