@@ -24,6 +24,12 @@ test("terminalText keeps what a terminal shows: spinners and progress overwrite 
   assert.equal(terminalText("🚀 emoji survive"), "🚀 emoji survive");
 });
 
+test("terminalText stops cursor moves at a right edge, so a huge column can't exhaust memory", () => {
+  assert.equal(terminalText("\x1b[999999999GX").length, 1001);
+  assert.equal(terminalText("\x1b[999999999CX").length, 1001);
+  assert.equal(terminalText("ab\x1b[999999999C\x1b[999999999CX").length, 1001);
+});
+
 test("a plain command needs no scenario: no server, no request log, control sequences stripped", { skip: !pty && "node-pty isn't installed" }, async () => {
   const dir = tempDir();
   const out = join(dir, "run.txt");

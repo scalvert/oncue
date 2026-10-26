@@ -1,6 +1,6 @@
 # Title
 
-**Build:** `oncue render <folder>`
+**Build:** `npx oncue render <folder>`
 **Attaches to:** the docs page in video.json `related.doc`
 
 | Scene | Visual | Real or illustrative |

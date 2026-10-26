@@ -26,6 +26,8 @@ export const replayServer = (): string => join(packageRoot(), "assets", "capture
 export const fetchPreload = (): string => join(packageRoot(), "assets", "capture", "redirect-fetch.mjs");
 /** A CSI sequence (colors, cursor moves, erases), an OSC sequence (window titles), or one character. */
 const TOKEN = /\x1b\[([0-9;?]*)([A-Za-z])|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|[\s\S]/gu;
+/** The right edge for cursor moves. A real terminal stops at its width; this keeps `ESC[999999999G` from allocating a line that long. */
+const MAX_COL = 1000;
 
 /**
  * The text a terminal would show once `raw` has played: each line ends up as what's left after
@@ -44,8 +46,8 @@ export function terminalText(raw: string): string {
         const [tok, params, final] = m;
         if (final !== undefined) {
           const n = Number(params?.split(";")[0] || 0);
-          if (final === "G") col = Math.max(0, (n || 1) - 1);
-          else if (final === "C") col += n || 1;
+          if (final === "G") col = Math.min(MAX_COL, Math.max(0, (n || 1) - 1));
+          else if (final === "C") col = Math.min(MAX_COL, col + (n || 1));
           else if (final === "D") col = Math.max(0, col - (n || 1));
           else if (final === "K") cells = n === 1 ? cells.map((c, i) => (i <= col ? " " : c)) : n === 2 ? [] : cells.slice(0, col);
           continue;
@@ -107,7 +109,17 @@ function loadPty(): Pty {
 
 const pairs = (xs: string[]) => xs.map((x) => [x.slice(0, x.indexOf("=")), x.slice(x.indexOf("=") + 1)] as [string, string]);
 
-export async function captureCli(o: CliCapture): Promise<{ text: string; exitCode: number; log: string | null }> {
+export interface CliCaptureResult {
+  text: string;
+  exitCode: number;
+  /** The replay server's request log, or null when no scenario was given. */
+  log: string | null;
+}
+
+/** With a scenario, there's always a request log. */
+export function captureCli(o: CliCapture & { scenario: string }): Promise<CliCaptureResult & { log: string }>;
+export function captureCli(o: CliCapture): Promise<CliCaptureResult>;
+export async function captureCli(o: CliCapture): Promise<CliCaptureResult> {
   const pty = loadPty();
   const log = o.scenario ? o.out.replace(/\.[^./]*$/, "") + ".requests.log" : null;
   const server =

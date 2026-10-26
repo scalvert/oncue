@@ -2,7 +2,7 @@
  * __TITLE__.
  *
  * Scene by scene: what's on screen and where it came from lives in STORYBOARD.md.
- * Run: oncue narrate __FOLDER__ (once per script change), then oncue render __FOLDER__.
+ * Run: npx oncue narrate __FOLDER__ (once per script change), then npx oncue render __FOLDER__.
  */
 import { defineVideo } from "oncue";
 

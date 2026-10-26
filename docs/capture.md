@@ -6,6 +6,13 @@ fictional data, from a local replay server. Then record its real output in a rea
 
 ## CLI output
 
+A local command that calls no service, such as an install or a build, needs no scenario. Skip to
+step 2 and leave out `--scenario`:
+
+```bash
+npx oncue capture cli --cwd path/to/site --out capture/build.txt --cmd "npm run build"
+```
+
 1. **Write a scenario.** Take the response shapes from the service's docs, tests, or fixtures:
 
    ```json
@@ -16,18 +23,19 @@ fictional data, from a local replay server. Then record its real output in a rea
    `responses` are served in order, and the last one repeats. `sse` streams `text/event-stream`.
    `queryHas` and `queryLacks` match on query parameters.
 
-2. **Capture the CLI in a TTY.** `oncue capture cli` starts the replay server on `--port` (default
-   8787) and logs every request to `<out>.requests.log`. Keep the log as evidence of which calls
-   the CLI made.
+2. **Capture the CLI in a TTY.** With `--scenario`, `npx oncue capture cli` starts the replay
+   server on `--port` (default 8787) and logs every request to `<out>.requests.log`. Keep the log
+   as evidence of which calls the CLI made.
 
    ```bash
-   oncue capture cli --cwd path/to/cli --scenario capture/scenario.json --out capture/run.txt \
+   npx oncue capture cli --cwd path/to/cli --scenario capture/scenario.json --out capture/run.txt \
      --cmd "npm start --silent -- --server-url http://127.0.0.1:8787" --answer "Choose a field [1]: =1"
    ```
 
    `--answer PROMPT=REPLY` types the reply only after the prompt appears. `--env KEY=VALUE` sets
-   environment variables, and `--timeout` (default 60 s) bounds the run. The output has ANSI and
-   carriage-return sequences stripped. The CLI's exit code is recorded, not raised, so a capture of
+   environment variables, and `--timeout` (default 60 s) bounds the run. The output is the text a terminal
+   would show: carriage returns, cursor moves and erases overwrite in place, so a spinner leaves
+   nothing and a progress line leaves its last state. Colors and window titles are dropped. The CLI's exit code is recorded, not raised, so a capture of
    an error is still a capture. Interactive capture needs the optional `node-pty` dependency.
 
 3. **CLIs that require an HTTPS origin** reject `http://` server URLs. Preload the fetch redirect:

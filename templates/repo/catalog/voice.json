@@ -1,5 +1,5 @@
 {
-  "$comment": "The house voice: every video is narrated with it. oncue-placeholder makes offline tone takes for drafting. For real narration, pick a voice in ElevenLabs and set voice_id (and model_id, e.g. eleven_multilingual_v2); every take then goes stale until you run `oncue narrate`.",
+  "$comment": "The house voice: every video is narrated with it. oncue-placeholder makes offline tone takes for drafting. For real narration, pick a voice in ElevenLabs and set voice_id (and model_id, e.g. eleven_multilingual_v2); every take then goes stale until you run `npx oncue narrate`.",
   "voice_id": "oncue-placeholder",
   "model_id": "oncue-placeholder",
   "settings": {}
