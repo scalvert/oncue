@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { captionWords, type SpokenForm } from "../src/builder/captions.ts";
 import { jsonView, type JsonPath } from "../src/builder/json-view.ts";
+import { Term } from "../src/builder/term.ts";
 import { spokenText } from "../src/narration/script.ts";
 
 test("spoken text drops audio tags", () => {
@@ -25,6 +26,29 @@ test("spoken/written pairs", () => {
 
 test("lines break after sentences and at segment ends", () => {
   assert.deepEqual(captions("One. Two").map((c) => c.breakAfter), [true, true]);
+});
+
+test("stream keeps the text's own line breaks and wraps each line on its own", () => {
+  const texts = (t: Term) => t.steps.map((s) => s.text);
+  assert.deepEqual(texts(new Term(0).stream("Use OAuth instead.\nSource: https://example.com/docs")), [
+    "Use OAuth instead.",
+    "Source: https://example.com/docs",
+  ]);
+  assert.deepEqual(texts(new Term(0).stream("one two three\n\nfour", { width: 8 })), ["one two", "three", "", "four"]);
+});
+
+test("newlines at the start and end of streamed text add no step and no time", () => {
+  const plain = new Term(0).stream("Answer").out("next");
+  const padded = new Term(0).stream("\n\nAnswer\n").out("next");
+  assert.deepEqual(padded.steps, plain.steps);
+});
+
+test("blank streamed text adds no step and no time", () => {
+  for (const blank of ["", "\n", "\n\n", "  \n "]) {
+    const t = new Term(0).stream(blank);
+    assert.deepEqual(t.steps, [], JSON.stringify(blank));
+    assert.equal(t.cursor, new Term(0).cursor);
+  }
 });
 
 const DOC = { a: 1, results: [{ t: "x", u: "y", z: [1, 2] }, { t: "w", u: "v" }], w: [] };

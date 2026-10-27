@@ -31,6 +31,7 @@ import { readLock, staleness } from "../narration/lock.ts";
 import { expectedNarration } from "../checks/checks.ts";
 import { openPath } from "../core/open.ts";
 import { initRepo, isEsmRepo, newVideo } from "../workspace/scaffold.ts";
+import { installSkills, SKILLS_DIR, skillStates } from "../workspace/skills.ts";
 import { Workspace } from "../workspace/workspace.ts";
 
 async function loadRepo(): Promise<Workspace | null> {
@@ -86,13 +87,29 @@ program
         "  npx oncue narrate hello && npx oncue render hello",
         "  npx oncue next                      # what each video needs, and who does it",
         "",
-        "Working with an AI agent? Open this folder in it and say what video you want. AGENTS.md tells",
-        "it how to guide you; it starts with `npx oncue next`.",
+        "Working with an AI agent? Open this folder in it and say what video you want. AGENTS.md and",
+        `the make-video skill (${SKILLS_DIR}/make-video) tell it how to guide you.`,
         "",
         "The house voice is a placeholder (tones), so that works offline. For a real voice, set",
         "catalog/voice.json to an ElevenLabs voice and put ELEVENLABS_API_KEY in .env (see .env.example).",
       ].join("\n"),
     );
+  });
+
+program
+  .command("skills")
+  .description(`install or refresh the agent skills oncue ships (into ${SKILLS_DIR}); run after upgrading oncue`)
+  .option("--dir <dir>", "where to put them, relative to the repo", SKILLS_DIR)
+  .option("--check", "exit 1 if a copy is missing or differs from this oncue's; write nothing")
+  .action((o: { dir: string; check?: boolean }) => {
+    const root = findRoot(process.cwd()) ?? fail("not in an oncue repo (no oncue.config.ts here or above); run `npx oncue init`");
+    if (o.check) {
+      const states = skillStates(root, o.dir);
+      for (const s of states) console.log(`${padEnd(s.state, 8)} ${o.dir}/${s.name}`);
+      process.exitCode = states.every((s) => s.state === "current") ? 0 : 1;
+      return;
+    }
+    for (const f of installSkills(root, o.dir)) console.log(`wrote ${f}`);
   });
 
 program
@@ -349,20 +366,20 @@ const collect = (v: string, prev: string[]) => [...prev, v];
 
 capture
   .command("cli")
-  .description("run a recipe CLI in a real TTY against the replay server; save its exact output")
-  .requiredOption("--cwd <dir>", "the recipe directory")
-  .requiredOption("--scenario <file>", "replay server routes (see `capture serve`)")
-  .requiredOption("--out <file>", "where the output goes; requests go to <out>.requests.log")
+  .description("run a command in a real TTY, with the replay server up for anything it calls; save its exact output")
+  .requiredOption("--cwd <dir>", "where to run the command")
+  .option("--scenario <file>", "replay server routes, for a command that calls a service (see `capture serve`)")
+  .requiredOption("--out <file>", "where the output goes; with a scenario, requests go to <out>.requests.log")
   .requiredOption("--cmd <command>", "the command to run (bash -c)")
   .option("--answer <PROMPT=REPLY>", "type REPLY after PROMPT appears (repeatable)", collect, [])
   .option("--port <port>", "replay server port", "8787")
   .option("--env <KEY=VALUE>", "extra environment for the CLI (repeatable)", collect, [])
   .option("--timeout <seconds>", "give up after this long", Number, 60)
-  .action(async (o: { cwd: string; scenario: string; out: string; cmd: string; answer: string[]; port: string; env: string[]; timeout: number }) => {
+  .action(async (o: { cwd: string; scenario?: string; out: string; cmd: string; answer: string[]; port: string; env: string[]; timeout: number }) => {
     const { captureCli } = await import("../capture/cli.ts");
     const r = await captureCli({ ...o, answers: o.answer, timeoutMs: o.timeout * 1000 });
     console.log(r.text);
-    console.log(`[exit ${r.exitCode}] requests logged to ${r.log}`);
+    console.log(`[exit ${r.exitCode}]${r.log ? ` requests logged to ${r.log}` : ""}`);
   });
 
 capture

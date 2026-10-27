@@ -35,7 +35,7 @@ editor type-checks every call; run `tsc --noEmit` in CI.
 | `statement(sid, line1, line2, highlightCue)` | Big statement; line 2 is highlighted at the cue |
 | `terminal(sid, term, label, title, {fontSize, endId})` | Dark terminal window. `label` is the eyebrow, `title` the window title. `endId` spans several segments |
 | `card(sid, label, heading, items=[[text, cuePhrase]], doc)` | Checklist on the left, concept card on the right. `doc = {source, title, visibleTo, chipsLabel}` |
-| `flow(sid, label, {lanes, messages, notes, tag})` | Sequence diagram (messages) or per-system steps (notes), animated on cues |
+| `flow(sid, label, {lanes, messages, notes, tag})` | Sequence diagram (messages) or per-system steps (notes), animated on cues. Messages take one row each, in order, below the lane headers. Notes stack from the top of their lane, so a note covers the first message labels that cross that lane: put it on a lane those arrows don't cross, and check the frame |
 | `exchange(sid, label, {request, response, highlights, tag})` | One API call: request left, response right. Lines are verbatim; trim with `jsonView`, never edit |
 | `endCard(sid, headline, url)` | Closing card |
 | `capture({...})`, `addCapture(c, sid, end)` | A browser-capture scene (below) |

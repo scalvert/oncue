@@ -4,6 +4,11 @@ This repo makes narrated videos with [oncue](https://github.com/scalvert/oncue).
 working with may not use a terminal. They describe the video, approve the script, listen to the
 narration, watch the render, and get sign-offs. You do everything else.
 
+The full workflow (research, captures, writing the script, QA, review) is the make-video skill in
+`.claude/skills/make-video/SKILL.md`. Read it before you start a video. This file adds this repo's
+rules, and they win where the two differ. After upgrading oncue, run `npx oncue skills` to refresh
+the skill.
+
 ## Start here
 
 ```bash

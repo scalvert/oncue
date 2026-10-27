@@ -48,8 +48,8 @@ an ElevenLabs voice and put `ELEVENLABS_API_KEY` in `.env`.
 ## Making a video with an AI agent
 
 You don't need to use the terminal. Open the repo in a coding agent (Claude Code, Codex, Cursor,
-Glean, and others) and say what video you want. `oncue init` writes an `AGENTS.md` that tells the
-agent how to work with you:
+Glean, and others) and say what video you want. `oncue init` writes an `AGENTS.md` and installs the
+`make-video` skill (in `.claude/skills/`), which tell the agent how to work with you:
 
 1. You say what the video is about and who it's for. The agent drafts the script and reads it back.
 2. You approve the script. The agent records the narration, after asking, because a real voice
@@ -105,6 +105,7 @@ scene s2. If you rewrite a line, the visuals move with the new take.
 | `oncue new <folder> --id <id> --title <title>` | Add a video from the template |
 | `oncue next [video] [--json]` | What each video needs now, and who does it (start here) |
 | `oncue review <video>` | A review page for the approver: the video, the script, words to listen for |
+| `oncue skills [--check]` | Install or refresh the agent skills oncue ships (run after upgrading) |
 | `oncue doctor [--json]` | Check the toolchain and the voice setup, with a fix for each problem |
 | `oncue narrate <video>` | Record and lock the narration |
 | `oncue build <video>` | Locked narration to props (no voice calls) |

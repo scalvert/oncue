@@ -8,6 +8,7 @@ import { fail } from "../core/errors.ts";
 import { dumps } from "../core/json.ts";
 import { packageRoot } from "../core/program.ts";
 import { pyRepr } from "../core/text.ts";
+import { installSkills, skillStates } from "./skills.ts";
 import type { Workspace } from "./workspace.ts";
 
 /** Template files npm would drop or rewrite are stored under these names. */
@@ -37,6 +38,8 @@ export function initRepo(dir: string, name = basename(resolve(dir))): string[] {
   };
   mkdirSync(dir, { recursive: true });
   copy(src, dir);
+  // The agent skills, unless the repo has them already: `oncue skills` refreshes them.
+  if (skillStates(dir).every((s) => s.state === "missing")) out.push(...installSkills(dir));
   for (const d of ["projects", "public"]) mkdirSync(join(dir, d), { recursive: true });
   const pkg = join(dir, "package.json");
   if (!existsSync(pkg)) {
