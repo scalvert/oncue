@@ -43,6 +43,14 @@ test("newlines at the start and end of streamed text add no step and no time", (
   assert.deepEqual(padded.steps, plain.steps);
 });
 
+test("blank streamed text adds no step and no time", () => {
+  for (const blank of ["", "\n", "\n\n", "  \n "]) {
+    const t = new Term(0).stream(blank);
+    assert.deepEqual(t.steps, [], JSON.stringify(blank));
+    assert.equal(t.cursor, new Term(0).cursor);
+  }
+});
+
 const DOC = { a: 1, results: [{ t: "x", u: "y", z: [1, 2] }, { t: "w", u: "v" }], w: [] };
 
 test("a JSON view that keeps everything is JSON.stringify", () => {
