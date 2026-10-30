@@ -27,8 +27,8 @@ editor type-checks every call; run `tsc --noEmit` in CI.
 
 | Method | Purpose |
 |---|---|
-| `retime(gaps={sid: secs}, {defaultGap: 0.8})` | Cut the take at segment boundaries and insert silence after each. Cuts land in the quiet gap before any stray sound and fade over 30 ms. Words never change |
-| `playTake({gate})` | Play the take as recorded instead. `gate: true` silences the gaps between segments |
+| `retime(gaps={sid: secs}, {defaultGap: 0.8, preRoll: 0})` | Cut the take at segment boundaries and insert silence after each. Cuts land in the quiet gap before any stray sound and fade over 30 ms. Words never change. `preRoll` leaves that many seconds before the first scene (see below) |
+| `playTake({gate, preRoll: 0})` | Play the take as recorded instead. `gate: true` silences the gaps between segments |
 | `cue(seg, "phrase")` | Start time of the first word of `phrase` in segment `seg`. Ignores punctuation; fails if not found |
 | `segEnd(seg)`, `span(sid)`, `rel(sid, t)` | A segment's end; a scene's `[start, end]`; `t` relative to a scene's start |
 | `hero(sid, lines, chips=[[text, cuePhrase]])` | Two-line title; chips pop in on their cues |
@@ -84,6 +84,18 @@ props are typed in `composition/src/props.ts` and drawn by `composition/src/Expl
 To use your own composition, set `composition` in the config to a `.tsx` module whose default
 export is a React component that takes the video's props. oncue bundles it with esbuild and renders
 it the same way (see `composition/render/README.md` for the frame contract).
+
+A custom composition can also wrap the built-in one, to add an intro or an overlay without
+redrawing the scenes. Import it from `oncue/composition/Explainer.tsx`, and import the frame clock
+(`useCurrentFrame`, `interpolate`, `AbsoluteFill`) from `oncue/composition/runtime/index.tsx`.
+
+### Pre-roll for an intro
+
+`v.retime(gaps, { preRoll: 2.4 })` starts the first scene 2.4 s in, and the narration 2.4 s later
+than usual. Every cue moves with it, so a build script needs no other change. The props carry
+`preRoll`, and the composition can draw an intro, such as an animated logo, in `[0, preRoll)`.
+The built-in composition shows only its backdrop during the pre-roll. Then it fades in the first
+scene and the wordmark. Without a pre-roll, the props and every frame are unchanged.
 
 ## The engine
 

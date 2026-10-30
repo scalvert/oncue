@@ -89,6 +89,12 @@ export interface ExplainerProps {
   durationSeconds: number;
   narrationSrc?: string;
   narrationOffset?: number;
+  /**
+   * Seconds before the first scene, for a composition's intro (retime or playTake `preRoll`).
+   * The built-in composition shows only its backdrop then, and fades in the first scene and the
+   * wordmark when it ends.
+   */
+  preRoll?: number;
   scenes: Scene[];
   captions: CaptionWord[];
   showCaptions?: boolean;
