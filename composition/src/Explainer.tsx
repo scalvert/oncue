@@ -1178,10 +1178,13 @@ const V2Backdrop: React.FC = () => {
   );
 };
 
-const V2Bug: React.FC<{ seriesTag?: string }> = ({ seriesTag }) => {
+const V2Bug: React.FC<{ seriesTag?: string; preRoll?: number }> = ({ seriesTag, preRoll = 0 }) => {
   const { colors: C, logo } = useTheme();
+  const { t } = useT();
+  // With a pre-roll, the wordmark waits for the first scene so it doesn't sit over an intro.
+  const opacity = preRoll > 0 ? interpolate(t, [preRoll, preRoll + 0.35], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) : undefined;
   return (
-    <div style={{ position: "absolute", top: 52, right: 160, display: "flex", alignItems: "center", gap: 18 }}>
+    <div style={{ position: "absolute", top: 52, right: 160, display: "flex", alignItems: "center", gap: 18, opacity }}>
       {seriesTag && (
         <div style={{ fontFamily: SANS, fontWeight: 500, fontSize: 22, color: C.text, opacity: 0.7 }}>{seriesTag}</div>
       )}
@@ -1215,6 +1218,7 @@ export const Explainer: React.FC<ExplainerProps> = ({
   captions,
   narrationSrc,
   narrationOffset = 0,
+  preRoll = 0,
   showCaptions = true,
   brandLabel = "",
   look = "classic",
@@ -1233,12 +1237,12 @@ export const Explainer: React.FC<ExplainerProps> = ({
       {look === "v2" && <V2Backdrop />}
       {scenes.map((s, i) => (
         <Sequence key={s.id} from={Math.round(s.start * fps)} durationInFrames={Math.round((s.end - s.start) * fps)}>
-          <Fade dur={s.end - s.start} first={i === 0} last={i === scenes.length - 1}>
+          <Fade dur={s.end - s.start} first={i === 0 && preRoll === 0} last={i === scenes.length - 1}>
             <SceneSwitch s={s} />
           </Fade>
         </Sequence>
       ))}
-      {look === "v2" && <V2Bug seriesTag={seriesTag} />}
+      {look === "v2" && <V2Bug seriesTag={seriesTag} preRoll={preRoll} />}
       {showCaptions && <Captions words={captions} />}
       {narrationSrc && (
         <Sequence from={Math.round(narrationOffset * fps)}>

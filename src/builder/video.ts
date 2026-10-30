@@ -4,9 +4,10 @@ import type { CaptionWord, CaptureSceneProps, ExchangeSceneProps, ExplainerProps
 import type { Theme } from "../../composition/src/theme.ts";
 import { fail } from "../core/errors.ts";
 import { readJson } from "../core/json.ts";
+import { round } from "../core/numbers.ts";
 import { length } from "../core/text.ts";
 import { levels, type Levels } from "../audio/levels.ts";
-import { applyRetime, gateGaps, NARRATION_OFFSET, planRetime, type RetimeOptions, writeFadedTake } from "../audio/retime.ts";
+import { applyRetime, checkPreRoll, gateGaps, NARRATION_OFFSET, planRetime, type RetimeOptions, writeFadedTake } from "../audio/retime.ts";
 import type { NarrationLock } from "../narration/lock.ts";
 import { Capture, type CaptureOptions } from "./capture.ts";
 import { captionWords, type SpokenForm } from "./captions.ts";
@@ -95,6 +96,7 @@ export class Video {
   readonly #ctx: VideoContext;
   #timeline: Timeline | undefined;
   #levels: Levels | undefined;
+  #preRoll = 0;
 
   constructor(ctx: VideoContext) {
     this.#ctx = ctx;
@@ -137,21 +139,25 @@ export class Video {
 
   /**
    * Cut the take at segment boundaries and insert silence after each segment (default 0.8 s).
-   * Writes the retimed narration the video plays.
+   * Writes the retimed narration the video plays. `preRoll` leaves that many seconds before the
+   * first scene for a composition's intro.
    */
   retime(gaps: Record<string, number> = {}, opts: Omit<RetimeOptions, "gaps"> = {}): this {
-    const plan = planRetime(this.lock, this.#level, { ...opts, gaps });
+    const preRoll = checkPreRoll(opts.preRoll ?? 0);
+    const plan = planRetime(this.lock, this.#level, { ...opts, gaps, preRoll });
     applyRetime(this.#ctx.take, plan, join(this.publicDir, "narration.mp3"));
-    this.#timeline = new Timeline(plan.words, plan.segments, this.lock.segments.map((s) => s.id));
+    this.#preRoll = preRoll;
+    this.#timeline = new Timeline(plan.words, plan.segments, this.lock.segments.map((s) => s.id), preRoll);
     return this;
   }
 
   /**
-   * Play the take as recorded instead of retiming it, starting NARRATION_OFFSET in, with its end
-   * faded. `gate` silences the gaps between segments (stray breaths the aligner didn't attribute
-   * to a word).
+   * Play the take as recorded instead of retiming it, starting NARRATION_OFFSET in (after the
+   * pre-roll, if any), with its end faded. `gate` silences the gaps between segments (stray breaths
+   * the aligner didn't attribute to a word).
    */
-  playTake(opts: { gate?: boolean } = {}): this {
+  playTake(opts: { gate?: boolean; preRoll?: number } = {}): this {
+    const preRoll = checkPreRoll(opts.preRoll ?? 0);
     const out = join(this.publicDir, "narration.mp3");
     writeFadedTake(this.#ctx.take, this.#level, out);
     if (opts.gate) {
@@ -160,10 +166,12 @@ export class Video {
       renameSync(tmp, out);
       this.#ctx.log(`  gated ${n} inter-segment gaps`);
     }
-    const shift = (x: { start: number; end: number }) => ({ start: x.start + NARRATION_OFFSET, end: x.end + NARRATION_OFFSET });
+    const at = preRoll + NARRATION_OFFSET;
+    const shift = (x: { start: number; end: number }) => ({ start: x.start + at, end: x.end + at });
     const words = this.lock.words.map((w) => ({ word: w.word, ...shift(w) }));
     const segments = Object.fromEntries(this.lock.segments.map((s) => [s.id, shift(s)]));
-    this.#timeline = new Timeline(words, segments, this.lock.segments.map((s) => s.id));
+    this.#preRoll = preRoll;
+    this.#timeline = new Timeline(words, segments, this.lock.segments.map((s) => s.id), preRoll);
     return this;
   }
 
@@ -186,6 +194,11 @@ export class Video {
 
   get end(): number {
     return this.timeline.end;
+  }
+
+  /** Seconds before the first scene (the `preRoll` given to retime() or playTake()). */
+  get preRoll(): number {
+    return this.#preRoll;
   }
 
   /** A terminal laid out from scene `id`'s start. */
@@ -329,11 +342,13 @@ export class Video {
       brandLabel: o.brandLabel ?? d.brandLabel,
       look: o.look ?? "v2",
       narrationSrc: `${this.name}/narration.mp3`,
-      narrationOffset: NARRATION_OFFSET,
+      narrationOffset: round(this.#preRoll + NARRATION_OFFSET, 3),
       scenes: this.scenes,
       captions: o.captions ?? this.captions(o.extraSpoken),
       ...o.extra,
     };
+    // Only when set, so videos without a pre-roll keep byte-identical props.
+    if (this.#preRoll > 0) props.preRoll = this.#preRoll;
     if (o.seriesTag) props.seriesTag = o.seriesTag;
     props.theme = d.theme;
     if (o.localSans !== false && d.sans) props.sans = d.sans;

@@ -9,8 +9,9 @@ const norm = (w: string) => w.toLowerCase().replace(/[^a-z0-9]/g, "");
 
 /**
  * The narration on the video's clock: when each word and segment is spoken, and the span each
- * scene gets. Scene bounds are the midpoints of the pauses between segments; the video ends TAIL
- * seconds after the last word.
+ * scene gets. The first scene starts at `start` (the pre-roll, 0 by default), the other bounds are
+ * the midpoints of the pauses between segments, and the video ends TAIL seconds after the last
+ * word.
  */
 export class Timeline {
   readonly words: readonly Word[];
@@ -19,12 +20,12 @@ export class Timeline {
   readonly end: number;
   readonly #spans: Map<string, [number, number]>;
 
-  constructor(words: Word[], segments: Record<string, { start: number; end: number }>, order: string[]) {
+  constructor(words: Word[], segments: Record<string, { start: number; end: number }>, order: string[], start = 0) {
     this.words = words;
     this.segments = segments;
     this.order = order;
     const seg = (id: string) => segments[id] ?? fail(`no segment ${id}`);
-    const bounds = [0];
+    const bounds = [start];
     for (let i = 0; i + 1 < order.length; i++) bounds.push(round((seg(order[i]!).end + seg(order[i + 1]!).start) / 2, 3));
     this.end = round(seg(order[order.length - 1]!).end + TAIL, 3);
     bounds.push(this.end);

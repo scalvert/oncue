@@ -7,6 +7,12 @@ import type { Levels } from "./levels.ts";
 /** Where the narration starts in the video, so the first frame can register. */
 export const NARRATION_OFFSET = 0.6;
 
+/** Check a pre-roll length: seconds before the first scene, which a composition can fill. */
+export function checkPreRoll(preRoll: number): number {
+  if (!Number.isFinite(preRoll) || preRoll < 0) throw new Error(`preRoll must be a number of seconds >= 0 (got ${preRoll})`);
+  return preRoll;
+}
+
 export interface RetimeOptions {
   /** Silence after each segment, by id (seconds). Segments not listed get `defaultGap`. */
   gaps?: Record<string, number>;
@@ -16,6 +22,11 @@ export interface RetimeOptions {
    * attribute to a word; `pad` always keeps PAD_OUT after the last word.
    */
   endCut?: "safe" | "pad";
+  /**
+   * Seconds before the first scene (default 0). The narration and every scene start this much
+   * later, and a composition can draw an intro in [0, preRoll).
+   */
+  preRoll?: number;
 }
 
 /** The retimed narration: segment and word times on the video's clock, and how to make the audio. */
@@ -32,13 +43,13 @@ export interface RetimePlan {
  * timeline. Pure: the caller supplies the take's levels and runs the graph (applyRetime).
  */
 export function planRetime(lock: NarrationLock, level: Levels, opts: RetimeOptions = {}): RetimePlan {
-  const { gaps = {}, defaultGap = 0.8, endCut = "safe" } = opts;
+  const { gaps = {}, defaultGap = 0.8, endCut = "safe", preRoll = 0 } = opts;
   const takeEnd = level.length / 100;
   const filters: string[] = [];
   const labels: string[] = [];
   const segments: RetimePlan["segments"] = {};
   const words: Word[] = [];
-  let t = NARRATION_OFFSET;
+  let t = checkPreRoll(preRoll) + NARRATION_OFFSET;
   let prevEnd = 0;
   lock.segments.forEach((s, i) => {
     const a = safeStart(level, s.start, prevEnd);
