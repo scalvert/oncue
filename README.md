@@ -32,10 +32,10 @@ export default defineVideo((v) => {
 You need Node 22.18 or later and ffmpeg.
 
 ```bash
-mkdir my-videos && cd my-videos
-npx oncue init                 # config, catalog, voice, and a "hello" video
+mkdir my-videos && cd my-videos && npm init -y
 npm install --save-dev oncue
 npx playwright install chromium
+npx oncue init                 # config, catalog, voice, and a "hello" video
 npx oncue doctor               # checks Node, ffmpeg, Chromium, and the voice
 npx oncue narrate hello        # records the take (offline placeholder voice by default)
 npx oncue render hello         # projects/hello/renders/hello-final.mp4
