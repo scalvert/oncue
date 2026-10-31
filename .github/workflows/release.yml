@@ -59,6 +59,11 @@ jobs:
         with:
           node-version: 24
 
+      # `npm publish --dry-run` still runs prepublishOnly, and the tests
+      # encode audio and write posters.
+      - name: ffmpeg and cwebp
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg webp
+
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
 
