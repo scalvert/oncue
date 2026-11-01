@@ -75,7 +75,11 @@ export interface VideoState {
   source: "up-to-date" | "reproduced" | "rendered" | "re-render" | "unknown" | "unaccepted" | "unchecked";
   /** What changed, for re-render / rendered / reproduced. */
   changed: ("inputs" | "renderer")[];
-  /** Whether projects/ holds a render that isn't the accepted one. */
+  /**
+   * Whether projects/ holds a render that isn't the accepted one, from changed sources. A render
+   * from the accepted version's own sources doesn't count: different bytes there come from the
+   * machine (another OS can move a few pixels of text), not from a change to the video.
+   */
   renderWaiting: boolean;
   /** Whether projects/ holds a render at all. */
   rendered: boolean;
@@ -151,7 +155,8 @@ export async function assess(ws: Workspace, { rebuild, site = false, check = fal
         else if (fresh && sha256File(p.output) === m.sha256 && sha256File(p.poster) === m.posterSha256) s.source = "reproduced";
         else s.source = fresh ? "rendered" : "re-render";
       }
-      s.renderWaiting = s.rendered && sha256File(p.output) !== m.sha256;
+      // From the accepted version's sources, other bytes mean another machine, not a new video.
+      s.renderWaiting = s.rendered && s.source !== "up-to-date" && sha256File(p.output) !== m.sha256;
     }
 
     if (!v.hosted) {
@@ -226,9 +231,15 @@ export async function status(ws: Workspace, o: StatusOptions = {}): Promise<Vide
   const render = states.filter((s) => s.source === "re-render").map((s) => s.folder);
   const accept = states.filter((s) => s.renderWaiting && s.source !== "unaccepted").map((s) => s.id);
   const record = states.filter((s) => s.source === "reproduced").map((s) => s.id);
+  const codeOnly = states.filter((s) => (s.source === "re-render" || s.source === "rendered") && s.changed.join() === "renderer").length;
   const behind = states.filter((s) => site && s.deploy !== "held" && s.deploy !== "unlisted" && s.site !== `v${s.version}`);
   const next: string[] = [];
   if (render.length) next.push(`${cmd(`render ${render.join(" ")}`)}    # sources changed since the accepted version`);
+  if (codeOnly) {
+    next.push(
+      `${cmd("registry --same-as <old checkout>")}    # ${codeOnly} changed only by render code: render them here and in a checkout of the old sources, on one machine; records the ones that match`,
+    );
+  }
   if (accept.length) next.push(`${cmd("compare <video> <accepted.mp4>")}, then ${cmd(`registry --accept ${accept.join(" ")} --note '...'`)}`);
   if (record.length) next.push(`${cmd(`registry --accept ${record.join(" ")} --note '...'`)}    # same files from the current sources: records it, no new version`);
   if (undeployed.length) next.push(cmd("deploy"));

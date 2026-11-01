@@ -113,7 +113,7 @@ scene s2. If you rewrite a line, the visuals move with the new take.
 | `oncue check [video] [--media] [--release]` | Metadata, narration locks, captions, and the redaction scan |
 | `oncue compare <video> <approved.mp4>` | Compare a new render with an approved one: audio and frames |
 | `oncue capture cli \| page \| pages \| serve` | Record real terminal sessions and page captures |
-| `oncue registry [--check \| --accept <id>]` | Write the public registry, or accept a render as a new version |
+| `oncue registry [--check \| --accept <id> \| --same-as <dir>]` | Write the public registry, accept a render as a new version, or record that a render-code change left videos unchanged |
 | `oncue deploy` / `oncue status` | Upload accepted media to the media store, and report what's live |
 
 `<video>` is a folder under `projects/` or a video id. `--all` works wherever a video is accepted.

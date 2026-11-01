@@ -22,6 +22,7 @@ import { buildProject, narrate } from "../pipeline/build.ts";
 import { poster, rendererFor, renderProject } from "../pipeline/render.ts";
 import { deploy } from "../release/deploy.ts";
 import * as registry from "../release/registry.ts";
+import { sameAs as sameAsCheck } from "../release/same-as.ts";
 import { saveLedger } from "../release/versions.ts";
 import { assess, status } from "../release/status.ts";
 import { doctor } from "../workspace/doctor.ts";
@@ -259,8 +260,26 @@ program
   .option("--media-from <dir>", "accept <DIR>/videos/<id>.mp4 + <DIR>/posters/<id>.webp instead of renders")
   .option("--check", "fail if registry.json is stale (CI); writes nothing")
   .option("--note <text>", "why this version (recorded in the ledger)")
-  .action((o: { accept: string[]; acceptAll?: boolean; mediaFrom?: string; check?: boolean; note?: string }) => {
+  .option("--same-as <dir>", "record that renders matching <DIR>'s (a checkout of sources known to produce the accepted versions) are current; no new versions")
+  .action(async (o: { accept: string[]; acceptAll?: boolean; mediaFrom?: string; check?: boolean; note?: string; sameAs?: string }) => {
     const ws = repo();
+    if (o.sameAs) {
+      if (o.accept.length || o.acceptAll || o.mediaFrom || o.check) fail("--same-as doesn't combine with --accept, --accept-all, --media-from, or --check");
+      for (const p of ws.projects()) await buildProject(ws, p, { mode: "frozen", log: () => {} });
+      const { ledger, results } = sameAsCheck(ws, home(o.sameAs));
+      const width = Math.max(0, ...results.map((r) => r.id.length));
+      for (const r of results) {
+        const ver = r.version ? `v${r.version}` : "-";
+        const what = { recorded: `same as ${ver}: recorded`, current: `already current with ${ver}`, skipped: `skipped: ${r.reason}` }[r.outcome];
+        console.log(`${r.id.padEnd(width)}  ${what}`);
+      }
+      const recorded = results.filter((r) => r.outcome === "recorded").length;
+      if (recorded) {
+        saveLedger(ledger, ws.paths.ledger);
+        console.log(`\nrecorded ${recorded} in ${rel(ws.paths.ledger)} (no new versions). Commit it.`);
+      } else console.log("\nnothing recorded");
+      return;
+    }
     const u = registry.update(ws, {
       accept: new Set(o.accept),
       acceptAll: o.acceptAll,

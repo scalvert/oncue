@@ -48,6 +48,33 @@ fingerprints with the current sources. A changed script, take, capture, or theme
 Accepting a render that's identical to an accepted version adds no version. It records that the
 version was reproduced (`reproducedBy`), which is how you show a toolkit change didn't move it.
 
+### When only the render code changed
+
+The fingerprint includes oncue's render code (the composition, the renderer, bundled fonts, and
+the pinned React, esbuild and Playwright versions), but not oncue's version number. So a change to
+that code shows every video as "re-render: renderer", even when no video's pixels changed. An
+oncue release that leaves the code alone flags nothing.
+
+The accepted bytes can't always settle whether a video changed. Another machine or OS version can
+move a few pixels of text, for old and new code alike. Compare old and new on one machine instead:
+
+```bash
+git worktree add ../old-sources main        # the sources the accepted versions came from
+(cd ../old-sources && npm ci && npx oncue render <videos>)
+npx oncue render <videos>                    # here, with the change
+npx oncue registry --same-as ../old-sources
+```
+
+For each video, `--same-as` records the current fingerprint in the accepted version's
+`reproducedBy`, with `sameAs` naming the fingerprint it matched, only when:
+
+- the render here came from the current sources;
+- the render there came from sources already known to produce the accepted version;
+- the two MP4s and posters are byte-identical.
+
+It skips every other video and says why. It adds no version and changes nothing published. A
+video whose renders differ needs a person's review and `--accept`, as usual.
+
 Accepted files go to `dist/media/<id>.<sha10>.mp4` and `.webp`. That folder is append-only, so
 every approved render stays available for comparison and rollback. A new video isn't listed in the
 registry until its first accept.
