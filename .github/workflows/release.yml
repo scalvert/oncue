@@ -54,10 +54,9 @@ jobs:
           # release-it requires one.
           ref: ${{ github.head_ref || github.ref_name }}
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 24
+      # Node from .mise.toml
+      - name: Setup mise
+        uses: jdx/mise-action@v5.2.5
 
       # `npm publish --dry-run` still runs prepublishOnly, and the tests
       # encode audio and write posters.
@@ -100,12 +99,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      # Node from .mise.toml. npm publishes to registry.npmjs.org, its default,
+      # so there's no .npmrc to write.
+      - name: Setup mise
+        uses: jdx/mise-action@v5.2.5
         with:
-          node-version: 24
-          registry-url: https://registry.npmjs.org
-          # No `cache:` here: never restore a cache into a build that gets published.
+          # Never restore a cache into a build that gets published.
+          cache: false
 
       # Trusted publishing needs npm 11.5.1 or later. npm 12.2.1 fails to
       # publish with OIDC: it rejects the token that its OIDC step sets as an
