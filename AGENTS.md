@@ -8,7 +8,7 @@ Don't make it here. Make a new repo for their videos and follow the `AGENTS.md` 
 
 ```bash
 mkdir my-videos && cd my-videos && npm init -y
-npm install --save-dev github:scalvert/oncue
+npm install --save-dev oncue
 npx oncue init "Their brand"
 npx oncue next
 ```
@@ -18,11 +18,16 @@ To try oncue without a new repo, `examples/acme` is a complete one: `cd examples
 
 ## If you're changing oncue
 
+- Set up with `mise install && npm ci`. `.mise.toml` pins Node, and CI uses the same pin. You also
+  need ffmpeg and cwebp.
 - `npm run typecheck` and `npm test` must pass. CI also renders the example on Linux.
 - Keep it generic. Brands, sign-off kinds, redaction rules, and hosting belong in a repo's
   `oncue.config.ts`, never in `src/`.
 - A change to the composition, the renderer, or the builder can change every video's pixels. Say
   so in the PR, and check the examples with `oncue compare` against renders from before the change.
+- Give every PR a changelog label (`breaking`, `enhancement`, `bug`, `documentation`, or
+  `internal`). Releases run in the Release workflow; see `RELEASE.md`. Never publish from a laptop
+  except the one-time first release it describes, and never without the owner's OK.
 - Commands do their work in `src/` modules that take a `Workspace`; `src/cli/main.ts` only parses
   arguments and prints. Anything a person reads also comes as `--json` for agents.
 - `templates/repo/AGENTS.md` is what every new video repo's agent reads. Keep it in plain words:

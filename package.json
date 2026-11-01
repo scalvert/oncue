@@ -1,6 +1,6 @@
 {
   "name": "oncue",
-  "version": "0.1.0",
+  "version": "0.0.0",
   "description": "Narrated developer videos from real output: write the script, lock the voice-over, and place every visual on its narration cue.",
   "license": "MIT",
   "author": "Steve Calvert",
@@ -9,6 +9,9 @@
     "url": "git+https://github.com/scalvert/oncue.git"
   },
   "homepage": "https://github.com/scalvert/oncue#readme",
+  "bugs": {
+    "url": "https://github.com/scalvert/oncue/issues"
+  },
   "keywords": [
     "video",
     "explainer",
@@ -58,6 +61,7 @@
   "scripts": {
     "build": "rm -rf dist && tsc -p tsconfig.build.json && chmod +x dist/src/cli/main.js",
     "prepare": "npm run build",
+    "prepublishOnly": "npm run build && npm run typecheck && npm test",
     "typecheck": "tsc --noEmit -p . && tsc --noEmit -p composition",
     "test": "node --conditions=oncue-source --test --test-reporter=dot \"tests/**/*.test.ts\" composition/render/runtime.test.mjs",
     "oncue": "node --conditions=oncue-source src/cli/main.ts"
@@ -71,9 +75,11 @@
     "react-dom": "18.3.1"
   },
   "devDependencies": {
+    "@release-it-plugins/lerna-changelog": "9.0.0",
     "@types/node": "22.20.5",
     "@types/react": "18.3.31",
     "@types/react-dom": "18.3.7",
+    "release-it": "20.2.1",
     "typescript": "5.9.3"
   },
   "optionalDependencies": {
