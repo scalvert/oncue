@@ -18,6 +18,8 @@ To try oncue without a new repo, `examples/acme` is a complete one: `cd examples
 
 ## If you're changing oncue
 
+- Set up with `mise install && npm ci`. `.mise.toml` pins Node, and CI uses the same pin. You also
+  need ffmpeg and cwebp.
 - `npm run typecheck` and `npm test` must pass. CI also renders the example on Linux.
 - Keep it generic. Brands, sign-off kinds, redaction rules, and hosting belong in a repo's
   `oncue.config.ts`, never in `src/`.
