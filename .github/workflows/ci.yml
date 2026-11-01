@@ -11,10 +11,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.20.0
-          cache: npm
+      # Node from .mise.toml
+      - name: Setup mise
+        uses: jdx/mise-action@v5.2.5
 
       - name: ffmpeg and cwebp
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg webp
@@ -33,10 +32,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22.20.0
-          cache: npm
+      - name: Setup mise
+        uses: jdx/mise-action@v5.2.5
 
       - name: ffmpeg and cwebp
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg webp
