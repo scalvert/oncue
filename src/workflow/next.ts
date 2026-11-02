@@ -147,10 +147,25 @@ export function next(ws: Workspace, p: Project, state: VideoState | undefined, b
   }
 
   if (s && (s.renderWaiting || s.source === "rendered")) {
+    // Only oncue's render code changed: the video may not have. Settle that before a person reviews.
+    const codeOnly = s.version && s.source === "rendered" && s.changed.length === 1 && s.changed[0] === "renderer";
     return report(
       "review",
-      s.version ? `A new render is waiting to replace v${s.version}.` : "The first render is ready for review.",
+      codeOnly
+        ? `Only the render code changed since v${s.version}, so the video may be the same. Check that before anyone reviews it.`
+        : s.version
+          ? `A new render is waiting to replace v${s.version}.`
+          : "The first render is ready for review.",
       [
+        ...(codeOnly
+          ? [
+              {
+                who: "agent" as const,
+                what: `On this machine, render it in a checkout of the sources v${s.version} was accepted from (a worktree of the base branch), then compare the two. If they match, this records it, and the rest of these steps aren't needed.`,
+                command: cmd("registry --same-as <that checkout>"),
+              },
+            ]
+          : []),
         { who: "agent", what: "Open the review page for the person.", command: cmd(`review ${v}`) },
         { who: "person", what: "Watch and listen to the whole video. Say what to change, or approve it." },
         ...(s.version

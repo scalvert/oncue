@@ -24,7 +24,7 @@ import { copyFileSync, existsSync, mkdirSync, readFileSync, statSync, utimesSync
 import { dirname, join, relative } from "node:path";
 import { fail } from "../core/errors.ts";
 import { sha256File } from "../core/files.ts";
-import { dumps as jsonDumps, readJson } from "../core/json.ts";
+import { dumps as jsonDumps, jsonEqual, readJson } from "../core/json.ts";
 import { round } from "../core/numbers.ts";
 import { cmd } from "../core/program.ts";
 import type { ApprovalKind } from "../config/config.ts";
@@ -32,7 +32,7 @@ import { duration as probeDuration } from "../media/ffmpeg.ts";
 import type { Project } from "../workspace/project.ts";
 import type { Catalog, Track, VideoMeta } from "../workspace/types.ts";
 import type { Workspace } from "../workspace/workspace.ts";
-import { type Ledger, loadLedger, type Media, record, sidecarFingerprint, versionOf } from "./versions.ts";
+import { knownFingerprints, latest, type Ledger, loadLedger, type Media, record, sidecarFingerprint, versionOf } from "./versions.ts";
 
 /** Fields that stay in this repo (build config, release bookkeeping). */
 const PRIVATE_FIELDS = new Set(["build", "approvals", "updated"]);
@@ -193,7 +193,14 @@ export function update(ws: Workspace, o: UpdateOptions = {}): Update {
       if (!old || old.media.sha256 !== sha) u.accepted.push(p.id);
     } else if (old) {
       held = { durationSeconds: old.durationSeconds, media: old.media, transcript: old.transcript };
-      if (have && p.output === mp4 && sha256File(mp4) !== old.media.sha256) u.pending.push(p.id);
+      if (have && p.output === mp4) {
+        const sha = sha256File(mp4);
+        // A render from the accepted version's own sources differs only by machine: not pending.
+        const fp = sidecarFingerprint(p.sidecar, sha, sha256File(poster));
+        const version = latest(ledger, p.id, old.media.sha256, old.media.posterSha256);
+        const sameSources = fp !== null && version !== null && knownFingerprints(version).some((k) => jsonEqual(k, fp));
+        if (sha !== old.media.sha256 && !sameSources) u.pending.push(p.id);
+      }
     } else {
       u.unlisted.push(p.id);
       continue;

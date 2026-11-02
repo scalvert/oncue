@@ -13,10 +13,15 @@
  *   inputs    <public>/<video>/: props.json (every word, timing, layout and theme value), the
  *             narration, captures, and assets
  *   renderer  oncue's composition and runtime, the render page, bundled fonts, src/render/, the
- *             oncue version, the installed React, esbuild and Playwright (so Chromium) versions,
- *             and the repo's own composition folder if the config names one
+ *             installed React, esbuild and Playwright (so Chromium) versions, and the repo's own
+ *             composition folder if the config names one. Not oncue's version number: a release
+ *             that leaves those files alone renders the same pixels, so it shouldn't flag a video.
  * `render` writes it next to the MP4 (<name>-final.render.json); accepting copies it into the
  * version if the hashes there match the files being accepted.
+ *
+ * `reproducedBy` lists other sources shown to produce a version's exact files. An entry with
+ * `sameAs` was shown indirectly (`registry --same-as`): its render had the same bytes as a render
+ * from `sameAs`, sources already known to produce the version.
  */
 import { createHash } from "node:crypto";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -24,7 +29,7 @@ import { dirname, join, relative, sep } from "node:path";
 import { sha256File } from "../core/files.ts";
 import { commitLabel, walk } from "../core/git.ts";
 import { dumps, jsonEqual, readJson } from "../core/json.ts";
-import { packageRoot, packageVersion } from "../core/program.ts";
+import { packageRoot } from "../core/program.ts";
 import type { Project } from "../workspace/project.ts";
 import type { Workspace } from "../workspace/workspace.ts";
 
@@ -54,8 +59,16 @@ export interface Version {
   fingerprint: Fingerprint | null;
   commit: string;
   note: string | null;
-  reproducedBy?: (Fingerprint & { date: string; commit: string })[];
+  reproducedBy?: Reproduction[];
 }
+
+/** Sources shown to produce a version's exact files, after it was accepted. */
+export type Reproduction = Fingerprint & {
+  /** Set when shown by matching a render from these sources, rather than the accepted bytes. */
+  sameAs?: Fingerprint;
+  date: string;
+  commit: string;
+};
 
 export interface Ledger {
   $comment?: string;
@@ -105,7 +118,7 @@ export function rendererFingerprint(ws: Workspace): string {
   };
   add(pkg, "oncue:", RENDERER_DIRS, RENDERER_SINGLE);
   if (ws.config.composition) add(ws.root, "", [[dirname(ws.config.composition), true]]);
-  entries.push(["oncue", packageVersion()], ...PINNED_PACKAGES.map((n): [string, string] => [`npm:${n}`, installedVersion(n)]));
+  entries.push(...PINNED_PACKAGES.map((n): [string, string] => [`npm:${n}`, installedVersion(n)]));
   return digest(entries);
 }
 
@@ -181,6 +194,16 @@ export function versionOf(ledger: Ledger, videoId: string, sha: string, posterSh
 export function latest(ledger: Ledger, videoId: string, sha: string, posterSha: string): Version | null {
   const n = versionOf(ledger, videoId, sha, posterSha);
   return (ledger.videos[videoId] ?? []).find((v) => v.version === n) ?? null;
+}
+
+/**
+ * Record that `fp` produces `version`'s files: its render had the same bytes as one from `sameAs`,
+ * which already does. Returns false if `fp` was already known.
+ */
+export function recordSameAs(ws: Workspace, version: Version, fp: Fingerprint, sameAs: Fingerprint): boolean {
+  if (knownFingerprints(version).some((k) => jsonEqual(k, fp))) return false;
+  (version.reproducedBy ??= []).push({ ...fp, sameAs, date: today(), commit: commit(ws) });
+  return true;
 }
 
 /** Append a version for these files unless the latest version already is them. Returns its number. */
