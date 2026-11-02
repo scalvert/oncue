@@ -1,6 +1,6 @@
 /** A pre-roll moves the narration and every scene later, and changes nothing when it's 0. */
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 import { checkPreRoll, NARRATION_OFFSET, planRetime } from "../src/audio/retime.ts";
 import { Timeline } from "../src/builder/timeline.ts";
 import { round } from "../src/core/numbers.ts";

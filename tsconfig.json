@@ -26,5 +26,5 @@
       "oncue/capture": ["./src/capture.ts"]
     }
   },
-  "include": ["src", "tests", "examples/*/oncue.config.ts", "examples/*/projects/*/build.ts", "templates/**/*.ts"]
+  "include": ["src", "tests", "vitest.config.ts", "examples/*/oncue.config.ts", "examples/*/projects/*/build.ts", "templates/**/*.ts"]
 }

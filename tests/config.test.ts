@@ -1,6 +1,6 @@
 /** Config: defaults, the theme, and what the builder puts in every video's props. */
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 import { defaultTheme, resolveTheme, rgba } from "../composition/src/theme.ts";
 import { resolveConfig } from "../src/config/load.ts";
 import { buildProject } from "../src/pipeline/build.ts";

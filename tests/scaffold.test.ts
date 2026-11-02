@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { test } from "node:test";
+import { test } from "vitest";
 import { check } from "../src/checks/checks.ts";
 import { buildProject, narrate } from "../src/pipeline/build.ts";
 import { bundle } from "../src/render/page.ts";

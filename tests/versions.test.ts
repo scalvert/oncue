@@ -1,7 +1,7 @@
 /** Versions: numbered per accepted render, fingerprinted, and never rewritten. */
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { test } from "node:test";
+import { test } from "vitest";
 import { update } from "../src/release/registry.ts";
 import {
   inputsFingerprint,

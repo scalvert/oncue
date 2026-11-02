@@ -4,7 +4,6 @@
 # Toolchain and build output
 node_modules/
 dist/
-composition/render/.runtime.test.bundle.mjs
 
 # The example's generated files
 examples/*/public/*/

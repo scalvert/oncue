@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { join } from "node:path";
-import { test } from "node:test";
+import { test } from "vitest";
 import { captureCli, terminalText } from "../src/capture/cli.ts";
 import { tempDir } from "./helpers.ts";
 
@@ -30,7 +30,8 @@ test("terminalText stops cursor moves at a right edge, so a huge column can't ex
   assert.equal(terminalText("ab\x1b[999999999C\x1b[999999999CX").length, 1001);
 });
 
-test("a plain command needs no scenario: no server, no request log, control sequences stripped", { skip: !pty && "node-pty isn't installed" }, async () => {
+// Skipped when the optional node-pty dependency isn't installed.
+test.skipIf(!pty)("a plain command needs no scenario: no server, no request log, control sequences stripped", async () => {
   const dir = tempDir();
   const out = join(dir, "run.txt");
   // An OSC window title (npm sets one), a color, then the text.

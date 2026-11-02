@@ -1,6 +1,6 @@
 /** Builder helpers: spoken text, captions, and the JSON view terminal scenes use. */
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 import { captionWords, type SpokenForm } from "../src/builder/captions.ts";
 import { jsonView, type JsonPath } from "../src/builder/json-view.ts";
 import { Term } from "../src/builder/term.ts";

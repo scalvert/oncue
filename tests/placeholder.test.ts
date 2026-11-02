@@ -1,6 +1,6 @@
 /** The placeholder voice: offline takes whose timings line up with the text. */
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 import { alignWords } from "../src/narration/alignment.ts";
 import { placeholderSynthesizer, placeholderTimings } from "../src/narration/placeholder.ts";
 import { takeText } from "../src/narration/script.ts";

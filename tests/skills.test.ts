@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { test } from "node:test";
+import { test } from "vitest";
 import { doctor } from "../src/workspace/doctor.ts";
 import { initRepo } from "../src/workspace/scaffold.ts";
 import { installSkills, SKILLS_DIR, skillNames, skillStates } from "../src/workspace/skills.ts";

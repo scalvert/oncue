@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
-import { test } from "node:test";
+import { test } from "vitest";
 import { OncueError } from "../src/core/errors.ts";
 import { sha256File } from "../src/core/files.ts";
 import { hashedName, heldBy, type Registry, type RegistryVideo, update, type UpdateOptions } from "../src/release/registry.ts";

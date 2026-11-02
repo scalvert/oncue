@@ -3,7 +3,7 @@
  * rounding the published videos depend on (ties to even, on the exact binary value).
  */
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 import { dumps } from "../src/core/json.ts";
 import { fixed, pyFloat, round } from "../src/core/numbers.ts";
 import { pyRepr } from "../src/core/text.ts";

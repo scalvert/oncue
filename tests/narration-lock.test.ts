@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { test } from "node:test";
+import { test } from "vitest";
 import { sha256File } from "../src/core/files.ts";
 import { ElevenLabs } from "../src/narration/elevenlabs.ts";
 import { lockedTake, type NarrationMode } from "../src/narration/narrator.ts";

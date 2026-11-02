@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { after } from "node:test";
+import { onTestFinished } from "vitest";
 import { loadConfig, resolveConfig } from "../src/config/load.ts";
 import { Workspace } from "../src/workspace/workspace.ts";
 
@@ -11,10 +11,10 @@ export const exampleRoot = join(dirname(fileURLToPath(import.meta.url)), "..", "
 export const exampleConfig = resolveConfig(await loadConfig(exampleRoot));
 export const repo = new Workspace(exampleRoot, exampleConfig);
 
-/** A temporary directory, removed when the test file finishes. */
+/** A temporary directory, removed when the test that made it finishes. */
 export function tempDir(prefix = "oncue-test-"): string {
   const dir = mkdtempSync(join(tmpdir(), prefix));
-  after(() => rmSync(dir, { recursive: true, force: true }));
+  onTestFinished(() => rmSync(dir, { recursive: true, force: true }));
   return dir;
 }
 

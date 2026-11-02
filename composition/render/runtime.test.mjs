@@ -1,18 +1,8 @@
 // Pins composition/src/runtime's animation math, so a change can't silently move every frame.
-// Run with npm test (bundles the runtime with esbuild, then node:test).
+// Run with npm test.
 import assert from "node:assert/strict";
-import { rmSync } from "node:fs";
-import { after, test } from "node:test";
-import { build } from "esbuild";
-
-const outfile = new URL("./.runtime.test.bundle.mjs", import.meta.url).pathname;
-await build({
-  entryPoints: [new URL("../src/runtime/index.tsx", import.meta.url).pathname],
-  bundle: true, outfile, format: "esm", platform: "node", jsx: "automatic", logLevel: "error",
-  external: ["react", "react/jsx-runtime"],
-});
-const { interpolate, spring } = await import(outfile);
-after(() => rmSync(outfile, { force: true }));
+import { test } from "vitest";
+import { interpolate, spring } from "../src/runtime/index.tsx";
 
 // spring() at 30 fps for the configs the Explainer uses, measured black-box from Remotion's public
 // spring() and rounded to 4 places.
