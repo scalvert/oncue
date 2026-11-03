@@ -1,4 +1,7 @@
 # Copy to .env (git-ignored). Never commit real keys.
+# A value can be a 1Password reference instead of the key, e.g.
+# ELEVENLABS_API_KEY="op://Private/ElevenLabs/credential". oncue reads it with the op CLI
+# only when a command needs it (narrate, deploy).
 
 # Narration (npx oncue narrate).
 ELEVENLABS_API_KEY=
