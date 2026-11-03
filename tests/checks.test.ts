@@ -1,6 +1,6 @@
 /** The redaction gate and the release rules. */
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 import { checkRelease, Report, scanText } from "../src/checks/checks.ts";
 import type { VideoMeta } from "../src/workspace/types.ts";
 import { exampleConfig } from "./helpers.ts";

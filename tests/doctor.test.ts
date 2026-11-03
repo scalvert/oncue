@@ -1,7 +1,7 @@
 /** `doctor`: what this machine is missing, and which gaps only some commands care about. */
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { test } from "node:test";
+import { test } from "vitest";
 import { doctor } from "../src/workspace/doctor.ts";
 import { tempDir, writeFile } from "./helpers.ts";
 

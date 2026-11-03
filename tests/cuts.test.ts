@@ -1,7 +1,7 @@
 /** Clip cuts start where the speech starts, even when the aligner marks it late, and end cleanly. */
 import assert from "node:assert/strict";
 import { join } from "node:path";
-import { test } from "node:test";
+import { test } from "vitest";
 import { fadeOut, MAX_LEAD, PAD_IN, safeStart } from "../src/audio/cuts.ts";
 import { levels as takeLevels } from "../src/audio/levels.ts";
 import { ffmpeg } from "../src/media/ffmpeg.ts";

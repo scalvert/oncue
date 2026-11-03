@@ -1,6 +1,6 @@
 /** The example's projects: every video is valid, locked, and clean. The CI gate in test form. */
 import assert from "node:assert/strict";
-import { test } from "node:test";
+import { test } from "vitest";
 import { check } from "../src/checks/checks.ts";
 import { dumps, update } from "../src/release/registry.ts";
 import { loadLedger, versionOf } from "../src/release/versions.ts";

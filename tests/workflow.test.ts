@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { appendFileSync, cpSync, existsSync, readFileSync, rmSync } from "node:fs";
 import { join } from "node:path";
-import { test } from "node:test";
+import { test } from "vitest";
 import { assess } from "../src/release/status.ts";
 import { next } from "../src/workflow/next.ts";
 import { reviewPage, wordsToCheck } from "../src/workflow/review.ts";

@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { cpSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { test } from "node:test";
+import { test } from "vitest";
 import { dumps, update } from "../src/release/registry.ts";
 import { status } from "../src/release/status.ts";
 import { saveLedger, writeSidecar } from "../src/release/versions.ts";

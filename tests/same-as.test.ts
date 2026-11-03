@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { cpSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
-import { test } from "node:test";
+import { test } from "vitest";
 import { dumps, update } from "../src/release/registry.ts";
 import { sameAs } from "../src/release/same-as.ts";
 import { assess, status } from "../src/release/status.ts";
