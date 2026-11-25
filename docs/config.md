@@ -48,7 +48,7 @@ export default defineConfig({
 | `paths.media` | `"dist/media"` | Accepted MP4s and posters, content-addressed and append-only |
 | `paths.registry` | `"registry.json"` | The public registry the site reads |
 | `paths.ledger` | `"versions.json"` | Every accepted render of every video |
-| `paths.env` | `".env"` | The git-ignored file with API keys. oncue loads it at startup |
+| `paths.env` | `".env"` | The git-ignored file with API keys. oncue loads it at startup. A value can be a 1Password reference (`op://...`), read with `op` when a command uses it |
 | `paths.videoTemplate` | oncue's template | The folder `oncue new` copies |
 | `brandLabel` | `""` | The small label on hero, statement, and end scenes when a video doesn't set one |
 | `theme` | oncue's slate theme | Colors, the `v2` backdrop, and the wordmark. Partial values merge over the default |

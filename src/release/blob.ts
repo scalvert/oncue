@@ -5,6 +5,7 @@
  */
 import { readFile, stat } from "node:fs/promises";
 import { BlobNotFoundError, head, put } from "@vercel/blob";
+import { secret } from "../core/secrets.ts";
 
 export interface Uploaded {
   url: string;
@@ -29,14 +30,17 @@ export const vercelBlob: MediaStore = {
   missing: () =>
     process.env.BLOB_READ_WRITE_TOKEN ? null : "BLOB_READ_WRITE_TOKEN isn't set. Put it in .env (git-ignored); never commit it.",
   async put(file, pathname, contentType) {
+    // Pass the token: @vercel/blob would otherwise read the raw variable, which can be an op:// reference.
+    const token = secret("BLOB_READ_WRITE_TOKEN");
     try {
-      const h = await head(pathname);
+      const h = await head(pathname, { token });
       return { url: h.url, pathname: h.pathname, size: h.size, existed: true };
     } catch (e) {
       if (!(e instanceof BlobNotFoundError)) throw e;
     }
     const size = (await stat(file)).size;
     const r = await put(pathname, await readFile(file), {
+      token,
       access: "public",
       addRandomSuffix: false,
       allowOverwrite: false,

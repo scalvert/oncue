@@ -3,6 +3,7 @@ import { pathToFileURL } from "node:url";
 import type { ExplainerProps } from "../../composition/src/props.ts";
 import { fail } from "../core/errors.ts";
 import { fixed } from "../core/numbers.ts";
+import { secret } from "../core/secrets.ts";
 import { localSansFont } from "../builder/fonts.ts";
 import { isVideoDefinition, Video, type VideoDefaults } from "../builder/video.ts";
 import { ElevenLabs } from "../narration/elevenlabs.ts";
@@ -23,7 +24,8 @@ export interface BuildOptions {
 
 /** What makes a take with `voice`: the offline placeholder, or ElevenLabs. */
 export function synthesizerFor(voice: Voice): () => SpeechSynthesizer {
-  return isPlaceholder(voice) ? () => placeholderSynthesizer : () => new ElevenLabs(process.env.ELEVENLABS_API_KEY);
+  // Called only when a take is generated, so a 1Password reference is read only then.
+  return isPlaceholder(voice) ? () => placeholderSynthesizer : () => new ElevenLabs(secret("ELEVENLABS_API_KEY"));
 }
 
 /** The project's locked take: regenerated only in update mode (`narrate`). */

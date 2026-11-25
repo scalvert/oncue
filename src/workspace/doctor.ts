@@ -11,6 +11,7 @@ import { join } from "node:path";
 import { findRoot } from "../config/load.ts";
 import { run } from "../core/exec.ts";
 import { loadEnv } from "../core/files.ts";
+import { isSecretReference } from "../core/secrets.ts";
 import { packageRoot } from "../core/program.ts";
 import { isPlaceholder } from "../narration/placeholder.ts";
 import { SKILLS_DIR, skillStates } from "./skills.ts";
@@ -115,7 +116,9 @@ export async function doctor(from: string = process.cwd()): Promise<Finding[]> {
     what: "ELEVENLABS_API_KEY",
     detail: placeholder
       ? "not needed yet: the house voice is the offline placeholder"
-      : "needed to record narration with the house voice; builds and renders use the locked takes",
+      : isSecretReference(process.env.ELEVENLABS_API_KEY)
+        ? "a 1Password reference; narrate reads it with the op CLI when it records"
+        : "needed to record narration with the house voice; builds and renders use the locked takes",
     fix: "the person adds ELEVENLABS_API_KEY=... to .env themselves (never paste a key into a chat)",
   });
   return out;

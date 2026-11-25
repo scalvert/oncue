@@ -45,6 +45,11 @@ The starter voice is a placeholder that makes tones instead of speech. It lets y
 render without an account. Release checks reject it. For real narration, set `catalog/voice.json` to
 an ElevenLabs voice and put `ELEVENLABS_API_KEY` in `.env`.
 
+A key in `.env` can be a 1Password reference instead of the key itself:
+`ELEVENLABS_API_KEY="op://Private/ElevenLabs/credential"`. oncue reads it with the
+[1Password CLI](https://developer.1password.com/docs/cli/) only when a command uses it (`narrate`,
+`deploy`), so the key never sits in a file. Running under `op run --env-file=.env -- ...` works too.
+
 ## Making a video with an AI agent
 
 You don't need to use the terminal. Open the repo in a coding agent (Claude Code, Codex, Cursor,
